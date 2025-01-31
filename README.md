@@ -1,10 +1,25 @@
 # Cartoons test app
+This application allows you to view information about cartoon characters or find a specific character using a [public API](https://rickandmortyapi.com/)
 
-![Screenshot from 2025-01-31 17-59-52](https://github.com/user-attachments/assets/ba08268c-57e1-4b2a-a5ec-93e6c18b4933)
+## Demo
+
+[demo.webm](https://github.com/user-attachments/assets/1f358d48-f074-4552-8e25-eb6dc005ae9b)
+
+
+## Feature Implementation:
+* Typeahead search with search optimizations (e.g., debounce, switchMap);
+* Save typeahead queries in the store (NgRx);
+* Render results using a virtual scroller with batch-based pagination;
+* Suggest past queries from the store for subsequent searches.
+
+## Tchnology stack
+* Angular;
+* NgRx;
+* RxJS;
+* Angular Material.
 
 ## Installation
 **Recommended ide: VS Code**
-
 
 **npm v 10.8.3**
 
