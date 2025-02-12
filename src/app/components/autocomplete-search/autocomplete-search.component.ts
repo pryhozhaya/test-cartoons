@@ -1,14 +1,14 @@
-import {AsyncPipe} from "@angular/common";
-import {ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit,} from "@angular/core";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
-import {FormControl, FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {Store} from "@ngrx/store";
-import {debounceTime, tap} from "rxjs";
-import {setPage, setSearchValue,} from "../../store/character.actions";
-import {selectQueries,} from "../../store/character.selectors";
-import {MatFormField} from "@angular/material/form-field";
-import {MatInput} from "@angular/material/input";
-import {MatAutocomplete, MatAutocompleteTrigger, MatOption} from "@angular/material/autocomplete";
+import { AsyncPipe } from "@angular/common";
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatAutocomplete, MatAutocompleteTrigger, MatOption } from "@angular/material/autocomplete";
+import { MatFormField } from "@angular/material/form-field";
+import { MatInput } from "@angular/material/input";
+import { Store } from "@ngrx/store";
+import { debounceTime, tap } from "rxjs";
+import { setPage, setSearchValue, } from "../../store/character.actions";
+import { selectQueries } from "../../store/character.selectors";
 
 @Component({
     selector: "app-autocomplete-search",

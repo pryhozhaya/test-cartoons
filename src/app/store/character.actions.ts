@@ -1,7 +1,7 @@
-import {HttpErrorResponse} from "@angular/common/http";
-import {createAction, props} from "@ngrx/store";
-import {Character} from "../models/character.model";
-import {Info} from "../models/common-pagination-response.interface";
+import { HttpErrorResponse } from "@angular/common/http";
+import { createAction, props } from "@ngrx/store";
+import { Character, CharacterCanvas } from "../models/character.model";
+import { Info } from "../models/common-pagination-response.interface";
 
 
 export const loadCharacters = createAction(
@@ -31,4 +31,19 @@ export const setPage = createAction(
 export const setSearchValue = createAction(
     "[Character] Set SearchValue",
     props<{ searchValue: string }>()
+);
+
+export const addCharacters = createAction(
+    '[Character] Add Characters',
+    props<{ characters: Character[] }>()
+);
+
+export const upsertCharacters = createAction(
+    '[Character] Upsert Characters',
+    props<{ characters: Character[] }>()
+);
+
+export const saveCharactersCanvas = createAction(
+    '[Character] Save Characters Canvas',
+    props<{ charactersCanvas: CharacterCanvas[] }>()
 );

@@ -1,41 +1,54 @@
-import { createSelector } from '@ngrx/store';
-import { CharacterState } from './character.reducer';
+import {
+  ActionReducerMap,
+  createFeatureSelector,
+  createSelector,
+} from '@ngrx/store';
+import { CharacterCanvas } from '../models/character.model';
+import * as charactersStore from './character.reducer';
 
-export const selectCharacterState = (state: any) => state.characters;
+export interface State {
+  characters: charactersStore.CharactersState
+}
+
+export const reducers: ActionReducerMap<State> = {
+  characters: charactersStore.reducer,
+};
+
+export const selectCharactersState = createFeatureSelector<charactersStore.CharactersState>('characters');
 
 export const selectCharacters = createSelector(
-  selectCharacterState,
-  (state: CharacterState) => state.characters
+  selectCharactersState,
+  charactersStore.selectAllCharacters
 );
 
 export const selectQueries = createSelector(
-  selectCharacterState,
-  (state: CharacterState) => state.queries
+  selectCharactersState,
+  charactersStore.selectQueries
 );
 
 export const selectInfo = createSelector(
-  selectCharacterState,
-  (state: CharacterState) => state.info
+  selectCharactersState,
+  charactersStore.selectInfo
 );
 
 export const selectLoading = createSelector(
-  selectCharacterState,
-  (state: CharacterState) => state.loading
+  selectCharactersState,
+  charactersStore.selectLoading
 );
 
 export const selectPage = createSelector(
-  selectCharacterState,
-  (state: CharacterState) => state.page
+  selectCharactersState,
+  charactersStore.selectPage
 );
 
 export const selectSearchValue = createSelector(
-  selectCharacterState,
-  (state: CharacterState) => state.searchValue
+  selectCharactersState,
+  charactersStore.selectSearchValue
 );
 
 export const selectError = createSelector(
-  selectCharacterState,
-  (state: CharacterState) => state.error
+  selectCharactersState,
+  charactersStore.selectError
 );
 
 export const selectPageAndTotalPage = createSelector(
@@ -46,3 +59,14 @@ export const selectPageAndTotalPage = createSelector(
         pageCount: info?.pages ?? 1,
     })
 );
+
+export const selectCharactersCanvas = createSelector(
+  selectCharactersState,
+  charactersStore.selectCharactersCanvas
+);
+
+export const selectCharacterCanvasById = createSelector(
+  selectCharactersCanvas,
+  (canvas: CharacterCanvas[], props: { id: number }) => canvas.find((c) => c.characterId === props.id)
+);
+

@@ -1,12 +1,12 @@
-import {ScrollingModule} from '@angular/cdk/scrolling';
-import {CommonModule} from '@angular/common';
-import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
-import {Store} from '@ngrx/store';
-import {AutocompleteSearchComponent} from "../../components/autocomplete-search/autocomplete-search.component";
-import {loadCharacters, setPage} from '../../store/character.actions';
-import {selectCharacters, selectError, selectPageAndTotalPage} from '../../store/character.selectors';
-import {CharacterCardComponent} from "./components/character-card/character-card.component";
-import {PageChangeDirective} from "./directives/page-change.directive";
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { AutocompleteSearchComponent } from "../../components/autocomplete-search/autocomplete-search.component";
+import { loadCharacters, setPage } from '../../store/character.actions';
+import { selectCharacters, selectError, selectPageAndTotalPage } from '../../store/character.selectors';
+import { CharacterCardComponent } from "./components/character-card/character-card.component";
+import { PageChangeDirective } from "./directives/page-change.directive";
 
 @Component({
     standalone: true,

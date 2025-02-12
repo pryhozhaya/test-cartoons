@@ -14,3 +14,17 @@ export interface Character {
   };
   image: string;
 }
+export interface CharacterCanvas {
+  characterId: number;
+  canvas: Canvas;
+}
+
+export interface Canvas{
+  polygons: Polygon[]
+}
+
+export interface Polygon{
+  points: { x: number; y: number }[];
+  fillColor: string;
+}
+
