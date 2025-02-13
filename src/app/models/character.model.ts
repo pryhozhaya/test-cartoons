@@ -20,11 +20,13 @@ export interface CharacterCanvas {
 }
 
 export interface Canvas{
-  polygons: Polygon[]
+  polygons: Shape[]
 }
 
-export interface Polygon{
-  points: { x: number; y: number }[];
-  fillColor: string;
+export interface Shape {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 

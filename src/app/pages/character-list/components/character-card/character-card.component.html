@@ -1,5 +1,5 @@
 <div class="card">
-  <img [src]="character.image" [alt]="character.name" class="card-img-top">
+  <img [src]="character.image" [alt]="character.name" class="card-img-top" (click)="openDialog()">
   <div class="card-body">
     <h5 class="card-title">{{ character.name }}</h5>
     <p class="card-text"><span>Status:</span> {{ character.status }}</p>
