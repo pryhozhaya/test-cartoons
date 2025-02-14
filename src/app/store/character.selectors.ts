@@ -65,8 +65,9 @@ export const selectCharactersCanvas = createSelector(
   charactersStore.selectCharactersCanvas
 );
 
-export const selectCharacterCanvasById = createSelector(
-  selectCharactersCanvas,
-  (canvas: CharacterCanvas[], props: { id: number }) => canvas.find((c) => c.characterId === props.id)
-);
+export const selectCharacterCanvasById = (id: number) =>
+  createSelector(
+    selectCharactersCanvas,
+    (canvas: CharacterCanvas[]) => canvas.find((c) => c.characterId === id)
+  );
 

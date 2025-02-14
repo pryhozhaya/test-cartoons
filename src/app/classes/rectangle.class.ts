@@ -28,5 +28,11 @@ export class Rectangle2D extends Shape2D {
     );
   }
 
+  rotate(context: CanvasRenderingContext2D, angle: number, x: number, y: number): void {
+    context.translate(x, y)
+    context.rotate(angle)
+    context.translate(-x, -y)
+    this.draw(context)
 
+  }
 }

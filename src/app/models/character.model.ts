@@ -1,3 +1,5 @@
+import { Rectangle2D } from "../classes/rectangle.class";
+
 export interface Character {
   id: number;
   name: string;
@@ -16,17 +18,17 @@ export interface Character {
 }
 export interface CharacterCanvas {
   characterId: number;
-  canvas: Canvas;
+  canvas: Rectangle2D[]
 }
 
-export interface Canvas{
-  polygons: Shape[]
-}
+// export interface Canvas{
+//   shapes: Shape2D[]
+// }
 
-export interface Shape {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+// export interface Shape {
+//   x: number;
+//   y: number;
+//   w: number;
+//   h: number;
+// }
 
