@@ -71,8 +71,8 @@ export class PopupComponent implements OnInit, OnDestroy {
       )
       .subscribe((charactersCanvas) => {
         charactersCanvas?.canvas.forEach((shape) => {
-          const { x, y, w, h, color } = shape;
-          const newRect = new Rectangle2D(x, y, w, h, color);
+          const { x, y, w, h, angle, color } = shape;
+          const newRect = new Rectangle2D(x, y, w, h, angle, color);
           this.objectCollection.push(newRect);
         });
       });
@@ -91,7 +91,7 @@ export class PopupComponent implements OnInit, OnDestroy {
     const mouseMove$ = fromEvent<MouseEvent>(this.canvas(), "mousemove");
     const mouseUp$ = fromEvent<MouseEvent>(document, "mouseup");
 
-    this.objectCollection.forEach((shape) => shape.draw(this.context()));
+    this.objectCollection.forEach((shape) => shape.rotate(this.context()));
 
     // Drawing logic
     mouseDown$
@@ -106,13 +106,14 @@ export class PopupComponent implements OnInit, OnDestroy {
                 y,
                 event.offsetX - x,
                 event.offsetY - y,
+                0,
                 "blue"
               );
               this.clearCanvas();
               this.objectCollection.forEach((shape) =>
-                shape.draw(this.context())
+                shape.rotate(this.context())
               );
-              newRect.draw(this.context());
+              newRect.rotate(this.context());
               return newRect;
             }, null),
             takeUntil(
@@ -138,10 +139,14 @@ export class PopupComponent implements OnInit, OnDestroy {
         filter(() => this.state !== "drag"),
         map((event) => {
           const moveItem = this.objectCollection.find((item) =>
-            item.isCursorInside(event.offsetX, event.offsetY)
+            item.isCursorInside(this.context(), event.offsetX, event.offsetY)
           );
           const rotateItem = this.objectCollection.find((item) =>
-            item.isCursorNearCorner(event.offsetX, event.offsetY)
+            item.isCursorNearCorner(
+              this.context(),
+              event.offsetX,
+              event.offsetY
+            )
           );
 
           return moveItem ? "move" : rotateItem ? "rotate" : null;
@@ -172,7 +177,11 @@ export class PopupComponent implements OnInit, OnDestroy {
         switchMap((downEvent) => {
           this.state = "drag";
           const currentItem = this.objectCollection.find((item) =>
-            item.isCursorInside(downEvent.offsetX, downEvent.offsetY)
+            item.isCursorInside(
+              this.context(),
+              downEvent.offsetX,
+              downEvent.offsetY
+            )
           );
           if (!currentItem) {
             return EMPTY;
@@ -183,11 +192,11 @@ export class PopupComponent implements OnInit, OnDestroy {
 
           return mouseMove$.pipe(
             tap((moveEvent) => {
-              console.log({ currentItem });
               currentItem.move(
                 moveEvent.offsetX - offsetX - currentItem.x,
                 moveEvent.offsetY - offsetY - currentItem.y
               );
+
               this.drawItemCollection();
             }),
             takeUntil(mouseUp$.pipe(tap(() => (this.state = "idle"))))
@@ -197,47 +206,39 @@ export class PopupComponent implements OnInit, OnDestroy {
       .subscribe();
 
     // Rotating logic
+    let lastMouseX = 0;
+
     mouseDown$
       .pipe(
         filter(() => this.state === "rotating"),
         switchMap((downEvent) => {
           this.state = "drag";
           const currentItem = this.objectCollection.find((item) =>
-            item.isCursorNearCorner(downEvent.offsetX, downEvent.offsetY)
+            item.isCursorNearCorner(
+              this.context(),
+              downEvent.offsetX,
+              downEvent.offsetY
+            )
           );
           if (!currentItem) {
             return EMPTY;
           }
-          const diffX = downEvent.offsetX;
-          const diffY = downEvent.offsetY;
-          const rectCenterX = currentItem.x + currentItem.w / 2;
-          const rectCenterY = currentItem.y + currentItem.h / 2;
-          const offsetX = diffX - rectCenterX;
-          const offsetY = diffY - rectCenterY;
-          const startLine = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
-
           return mouseMove$.pipe(
             tap((moveEvent) => {
-              const diffX = moveEvent.offsetX;
-              const diffY = moveEvent.offsetY;
-              const offsetX = diffX - rectCenterX;
-              const offsetY = diffY - rectCenterY;
-              const endLine = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
-              const angle = Math.atan2(startLine, endLine);
-    this.clearCanvas();
-              currentItem.rotate(
-                this.context(),
-                angle,
-                rectCenterX,
-                rectCenterY
+              let dx = moveEvent.clientX - lastMouseX;
+              currentItem.angle += dx * 0.02;
+              this.clearCanvas();
+              this.context().save();
+              this.objectCollection.forEach((shape) =>
+                shape.rotate(this.context())
               );
-              console.log(currentItem);
+              currentItem.rotate(this.context());
+              lastMouseX = moveEvent.clientX;
             }),
             takeUntil(
               mouseUp$.pipe(
                 tap(() => {
                   this.state = "idle";
-                  this.context().setTransform(1, 0, 0, 1, 0, 0);
                 })
               )
             )
@@ -263,7 +264,7 @@ export class PopupComponent implements OnInit, OnDestroy {
 
   private drawItemCollection(): void {
     this.clearCanvas();
-    this.objectCollection.forEach((shape) => shape.draw(this.context()));
+    this.objectCollection.forEach((shape) => shape.rotate(this.context()));
   }
 
   private setCanvasScale(): void {
@@ -294,4 +295,3 @@ export class PopupComponent implements OnInit, OnDestroy {
     this.dialogRef.close();
   }
 }
-

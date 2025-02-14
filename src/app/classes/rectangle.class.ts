@@ -1,7 +1,14 @@
-import { Shape2D } from './shape.class';
+import { Shape2D } from "./shape.class";
 
 export class Rectangle2D extends Shape2D {
-  constructor(x: number, y: number, public w: number, public h: number, color: string = 'black') {
+  constructor(
+    x: number,
+    y: number,
+    public w: number,
+    public h: number,
+    public angle: number,
+    color: string = "black"
+  ) {
     super(x, y, color);
   }
 
@@ -10,29 +17,53 @@ export class Rectangle2D extends Shape2D {
     context.fillRect(this.x, this.y, this.w, this.h);
   }
 
-  isCursorInside(x: number, y: number): boolean {
-    const x1 = Math.min(this.x, this.x + this.w);
-    const x2 = Math.max(this.x, this.x + this.w);
-    const y1 = Math.min(this.y, this.y + this.h);
-    const y2 = Math.max(this.y, this.y + this.h);
-
-    return x >= x1 && x <= x2 && y >= y1 && y <= y2;
+  rotate(context: CanvasRenderingContext2D): void {
+    context.save();
+    context.translate(this.x + this.w / 2, this.y + this.h / 2);
+    context.rotate(this.angle);
+    context.beginPath();
+    context.fillStyle = this.color;
+    context.rect(-this.w / 2, -this.h / 2, this.w, this.h);
+    context.fill();
+    const circle = new Path2D();
+    circle.arc(-this.w / 2, -this.h / 2, 8, 0, 2 * Math.PI);
+    context.fillStyle = "red";
+    context.fill(circle);
+    context.restore();
   }
 
-    isCursorNearCorner(x: number, y: number): boolean {
-    return (
-      x > this.x - 10 && x < this.x && y > this.y - 10 &&  y < this.y ||
-      x < this.x + this.w + 10 && x > this.x + this.w && y < this.y + this.h + 10 && y > this.y + this.h ||
-      x > this.x - 10 && x < this.x && y < this.y + this.h + 10 && y > this.y + this.h ||
-      x < this.x + this.w + 10 && x > this.x + this.w && y > this.y - 10 &&  y < this.y
-    );
+  isCursorInside(
+    context: CanvasRenderingContext2D,
+    cursorX: number,
+    cursorY: number
+  ): boolean {
+    const rect = new Path2D();
+    rect.rect(this.x, this.y, this.w, this.h);
+    context.save();
+    context.translate(this.x + this.w / 2, this.y + this.h / 2);
+    context.rotate(this.angle);
+    context.restore();
+    const mouseInside = context.isPointInPath(rect, cursorX, cursorY);
+    return mouseInside;
   }
 
-  rotate(context: CanvasRenderingContext2D, angle: number, x: number, y: number): void {
-    context.translate(x, y)
-    context.rotate(angle)
-    context.translate(-x, -y)
-    this.draw(context)
-
+  isCursorNearCorner(
+    context: CanvasRenderingContext2D,
+    cursorX: number,
+    cursorY: number
+  ): boolean {
+    const centerX = this.x + this.w / 2;
+    const centerY = this.y + this.h / 2;
+    const rotatedX =
+      centerX +
+      (this.x - centerX) * Math.cos(this.angle) -
+      (this.y - centerY) * Math.sin(this.angle);
+    const rotatedY =
+      centerY +
+      (this.x - centerX) * Math.sin(this.angle) +
+      (this.y - centerY) * Math.cos(this.angle);
+    const circle = new Path2D();
+    circle.arc(rotatedX, rotatedY, 8, 0, 2 * Math.PI);
+    return context.isPointInPath(circle, cursorX, cursorY);
   }
 }
