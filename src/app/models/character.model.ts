@@ -21,14 +21,11 @@ export interface CharacterCanvas {
   canvas: Rectangle2D[]
 }
 
-// export interface Canvas{
-//   shapes: Shape2D[]
-// }
-
-// export interface Shape {
-//   x: number;
-//   y: number;
-//   w: number;
-//   h: number;
-// }
+export enum CanvaState {
+  idle = "idle",
+  drawing = "drawing",
+  moving = "moving",
+  rotating = "rotating",
+  drag = "drag"
+}
 

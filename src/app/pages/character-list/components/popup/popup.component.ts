@@ -1,3 +1,4 @@
+import { KeyValuePipe } from "@angular/common";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,10 +9,10 @@ import {
   OnInit,
   viewChild,
 } from "@angular/core";
+import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import {
   MAT_DIALOG_DATA,
-  MatDialogModule,
-  MatDialogRef,
+  MatDialogModule
 } from "@angular/material/dialog";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { select, Store } from "@ngrx/store";
@@ -27,7 +28,8 @@ import {
   tap,
 } from "rxjs";
 import { Rectangle2D } from "../../../../classes/rectangle.class";
-import { CharacterCanvas } from "../../../../models/character.model";
+import { CanvaState, CharacterCanvas } from "../../../../models/character.model";
+import { RECTANGLE_COLORS, ROTATE_SPEED } from "../../../../models/constants";
 import { saveCharactersCanvas } from "../../../../store/character.actions";
 import {
   selectCharacterCanvasById,
@@ -37,7 +39,14 @@ import { finalizeWithValue } from "../../../../utils/rxjs-operator";
 
 @Component({
   selector: "app-popup",
-  imports: [MatDialogModule, MatDialogModule, MatFormFieldModule],
+  imports: [
+    KeyValuePipe,
+    MatDialogModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    FormsModule,
+    ReactiveFormsModule,
+  ],
   templateUrl: "./popup.component.html",
   styleUrl: "./popup.component.scss",
   standalone: true,
@@ -45,13 +54,15 @@ import { finalizeWithValue } from "../../../../utils/rxjs-operator";
 })
 export class PopupComponent implements OnInit, OnDestroy {
   public data = inject(MAT_DIALOG_DATA);
+  public rectangleColors = RECTANGLE_COLORS;
+  public colorControl = new FormControl(this.rectangleColors.blue);
   private store = inject(Store);
-  private dialogRef = inject(MatDialogRef<PopupComponent>);
+  
 
   private destroy$ = new Subject<void>();
-  private allcharactersCanvas: CharacterCanvas[] = [];
+  private allCharactersCanvas: CharacterCanvas[] = [];
   private objectCollection: Rectangle2D[] = [];
-  private state: "drawing" | "moving" | "rotating" | "idle" | "drag" = "idle";
+  private state: CanvaState =  CanvaState.idle;
   private allCharactersCanvas$ = this.store.select(selectCharactersCanvas);
 
   private canvasRef =
@@ -80,23 +91,22 @@ export class PopupComponent implements OnInit, OnDestroy {
     this.allCharactersCanvas$
       .pipe(takeUntil(this.destroy$))
       .subscribe((charactersCanvas) => {
-        this.allcharactersCanvas = [...charactersCanvas];
+        this.allCharactersCanvas = [...charactersCanvas];
       });
 
     this.setCanvasScale();
     this.canvas().style.backgroundImage = `url(${this.data.image})`;
-    this.canvas().style.backgroundSize = "cover";
 
     const mouseDown$ = fromEvent<MouseEvent>(this.canvas(), "mousedown");
     const mouseMove$ = fromEvent<MouseEvent>(this.canvas(), "mousemove");
     const mouseUp$ = fromEvent<MouseEvent>(document, "mouseup");
 
-    this.objectCollection.forEach((shape) => shape.rotate(this.context()));
+    this.objectCollection.forEach((shape) => shape.redraw(this.context()));
 
     // Drawing logic
     mouseDown$
       .pipe(
-        filter(() => this.state === "idle"),
+        filter(() => this.state === CanvaState.idle),
         map((event) => ({ x: event.offsetX, y: event.offsetY })),
         switchMap(({ x, y }) =>
           mouseMove$.pipe(
@@ -107,19 +117,19 @@ export class PopupComponent implements OnInit, OnDestroy {
                 event.offsetX - x,
                 event.offsetY - y,
                 0,
-                "blue"
+                this.color
               );
               this.clearCanvas();
               this.objectCollection.forEach((shape) =>
-                shape.rotate(this.context())
+                shape.redraw(this.context())
               );
-              newRect.rotate(this.context());
+              newRect.redraw(this.context());
               return newRect;
             }, null),
             takeUntil(
               mouseUp$.pipe(
                 tap(() => {
-                  this.state = "idle";
+                  this.state = CanvaState.idle;
                 })
               )
             ),
@@ -136,7 +146,7 @@ export class PopupComponent implements OnInit, OnDestroy {
     // Cursor and state management
     mouseMove$
       .pipe(
-        filter(() => this.state !== "drag"),
+        filter(() => this.state !== CanvaState.drag),
         map((event) => {
           const moveItem = this.objectCollection.find((item) =>
             item.isCursorInside(this.context(), event.offsetX, event.offsetY)
@@ -157,15 +167,15 @@ export class PopupComponent implements OnInit, OnDestroy {
         switch (currentItem) {
           case "move":
             this.canvas().style.cursor = "grab";
-            this.state = "moving";
+            this.state = CanvaState.moving;
             break;
           case "rotate":
             this.canvas().style.cursor = "move";
-            this.state = "rotating";
+            this.state = CanvaState.rotating;
             break;
           default:
             this.canvas().style.cursor = "default";
-            this.state = "idle";
+            this.state = CanvaState.idle;
             break;
         }
       });
@@ -173,9 +183,9 @@ export class PopupComponent implements OnInit, OnDestroy {
     // Moving logic
     mouseDown$
       .pipe(
-        filter(() => this.state === "moving"),
+        filter(() => this.state === CanvaState.moving),
         switchMap((downEvent) => {
-          this.state = "drag";
+          this.state = CanvaState.drag;
           const currentItem = this.objectCollection.find((item) =>
             item.isCursorInside(
               this.context(),
@@ -199,9 +209,10 @@ export class PopupComponent implements OnInit, OnDestroy {
 
               this.drawItemCollection();
             }),
-            takeUntil(mouseUp$.pipe(tap(() => (this.state = "idle"))))
+            takeUntil(mouseUp$.pipe(tap(() => (this.state = CanvaState.idle))))
           );
-        })
+        }),
+        takeUntil(this.destroy$),
       )
       .subscribe();
 
@@ -210,9 +221,9 @@ export class PopupComponent implements OnInit, OnDestroy {
 
     mouseDown$
       .pipe(
-        filter(() => this.state === "rotating"),
+        filter(() => this.state === CanvaState.rotating),
         switchMap((downEvent) => {
-          this.state = "drag";
+          this.state = CanvaState.drag;
           const currentItem = this.objectCollection.find((item) =>
             item.isCursorNearCorner(
               this.context(),
@@ -226,29 +237,39 @@ export class PopupComponent implements OnInit, OnDestroy {
           return mouseMove$.pipe(
             tap((moveEvent) => {
               let dx = moveEvent.clientX - lastMouseX;
-              currentItem.angle += dx * 0.02;
+              currentItem.angle += dx * ROTATE_SPEED;
               this.clearCanvas();
               this.context().save();
               this.objectCollection.forEach((shape) =>
-                shape.rotate(this.context())
+                shape.redraw(this.context())
               );
-              currentItem.rotate(this.context());
+              currentItem.redraw(this.context());
               lastMouseX = moveEvent.clientX;
             }),
             takeUntil(
               mouseUp$.pipe(
                 tap(() => {
-                  this.state = "idle";
+                  this.state = CanvaState.idle;
                 })
               )
             )
           );
-        })
+        }),
+        takeUntil(this.destroy$),
       )
       .subscribe();
   }
 
+  get color(): string {
+    return this.colorControl.value || RECTANGLE_COLORS.green;
+  }
+
+  setColor(color: string): void {
+    this.colorControl.setValue(color);
+  }
+
   ngOnDestroy(): void {
+    this.saveCanvas();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -264,7 +285,7 @@ export class PopupComponent implements OnInit, OnDestroy {
 
   private drawItemCollection(): void {
     this.clearCanvas();
-    this.objectCollection.forEach((shape) => shape.rotate(this.context()));
+    this.objectCollection.forEach((shape) => shape.redraw(this.context()));
   }
 
   private setCanvasScale(): void {
@@ -273,8 +294,8 @@ export class PopupComponent implements OnInit, OnDestroy {
     this.canvas().height = this.canvas().clientHeight * scale + 50;
   }
 
-  onNoClick(): void {
-    const index = this.allcharactersCanvas.findIndex(
+  saveCanvas(): void {
+    const index = this.allCharactersCanvas.findIndex(
       (item) => item.characterId === this.data.id
     );
     const updatedCanvas: CharacterCanvas = {
@@ -285,13 +306,12 @@ export class PopupComponent implements OnInit, OnDestroy {
     const charactersCanvas =
       index > -1
         ? [
-            ...this.allcharactersCanvas.slice(0, index),
+            ...this.allCharactersCanvas.slice(0, index),
             updatedCanvas,
-            ...this.allcharactersCanvas.slice(index + 1),
+            ...this.allCharactersCanvas.slice(index + 1),
           ]
-        : [...this.allcharactersCanvas, updatedCanvas];
+        : [...this.allCharactersCanvas, updatedCanvas];
 
     this.store.dispatch(saveCharactersCanvas({ charactersCanvas }));
-    this.dialogRef.close();
   }
 }

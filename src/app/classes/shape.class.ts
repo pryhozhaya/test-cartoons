@@ -5,7 +5,7 @@ export abstract class Shape2D {
     public color: string = "black"
   ) {}
 
-  abstract draw(context: CanvasRenderingContext2D): void;
+  abstract redraw(context: CanvasRenderingContext2D): void;
   abstract isCursorInside(
     context: CanvasRenderingContext2D,
     cursorX: number,

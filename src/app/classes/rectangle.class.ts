@@ -1,3 +1,4 @@
+import { CANVAS_COLORS, RECTANGLE_COLORS } from "../models/constants";
 import { Shape2D } from "./shape.class";
 
 export class Rectangle2D extends Shape2D {
@@ -7,17 +8,12 @@ export class Rectangle2D extends Shape2D {
     public w: number,
     public h: number,
     public angle: number,
-    color: string = "black"
+    color: string = RECTANGLE_COLORS.green
   ) {
     super(x, y, color);
   }
 
-  draw(context: CanvasRenderingContext2D): void {
-    context.fillStyle = this.color;
-    context.fillRect(this.x, this.y, this.w, this.h);
-  }
-
-  rotate(context: CanvasRenderingContext2D): void {
+  redraw(context: CanvasRenderingContext2D): void {
     context.save();
     context.translate(this.x + this.w / 2, this.y + this.h / 2);
     context.rotate(this.angle);
@@ -25,10 +21,13 @@ export class Rectangle2D extends Shape2D {
     context.fillStyle = this.color;
     context.rect(-this.w / 2, -this.h / 2, this.w, this.h);
     context.fill();
+    console.log(this)
     const circle = new Path2D();
     circle.arc(-this.w / 2, -this.h / 2, 8, 0, 2 * Math.PI);
-    context.fillStyle = "red";
+    context.fillStyle = CANVAS_COLORS.blue;
     context.fill(circle);
+    context.strokeStyle = CANVAS_COLORS.white;
+    context.stroke(circle);
     context.restore();
   }
 
