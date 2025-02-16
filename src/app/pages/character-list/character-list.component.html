@@ -1,21 +1,32 @@
 <div class="container">
-    <div class="header">
-        <app-autocomplete-search class="search-container"/>
-        <h1 class="title">All Characters</h1>
-    </div>
-    @let error = error$ | async;
-    @if (error) {
-        <p> {{ error }}</p>
-    } @else {
-        <div class="scroll-container" appPageChange [config]="(pageAndCount$ | async)!" (pageChangeEmit)="pageChange($event)">
-            <div class="virtual-scroll-list">
-                <div class="characters-list">
-                    @for (character of (characters$ | async); track $index) {
-                        <app-character-card [character]="character"></app-character-card>
-                    }
-                </div>
-            </div>
-        </div>
-    }
+  <div class="header">
+    <app-autocomplete-search class="search-container" />
+    <h1 class="title">All Characters</h1>
+  </div>
 
+  @if (isLoading$ | async) {
+    <div class="spinner-conainer">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+
+  @let error = error$ | async;
+  @if (error) {
+    <p>{{ error }}</p>
+  } @else {
+    <div
+      class="scroll-container"
+      appPageChange
+      [config]="(pageAndCount$ | async)!"
+      (pageChangeEmit)="pageChange($event)"
+    >
+      <div class="virtual-scroll-list">
+        <div class="characters-list">
+          @for (character of characters$ | async; track $index) {
+            <app-character-card [character]="character"></app-character-card>
+          }
+        </div>
+      </div>
+    </div>
+  }
 </div>
