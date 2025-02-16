@@ -1,4 +1,7 @@
-import { CANVAS_COLORS, RECTANGLE_COLORS } from "../pages/character-list/constants/constants";
+import {
+  CANVAS_COLORS,
+  RECTANGLE_COLORS,
+} from "../pages/character-list/constants/constants";
 import { Shape2D } from "./shape.class";
 
 export class Rectangle2D extends Shape2D {
@@ -8,7 +11,7 @@ export class Rectangle2D extends Shape2D {
     public w: number,
     public h: number,
     public angle: number,
-    public override color: string = RECTANGLE_COLORS.green
+    public override color: string = RECTANGLE_COLORS.green,
   ) {
     super(x, y, color);
   }
@@ -33,7 +36,7 @@ export class Rectangle2D extends Shape2D {
   isCursorInside(
     context: CanvasRenderingContext2D,
     cursorX: number,
-    cursorY: number
+    cursorY: number,
   ): boolean {
     const rect = new Path2D();
     rect.rect(this.x, this.y, this.w, this.h);
@@ -47,7 +50,7 @@ export class Rectangle2D extends Shape2D {
   isCursorNearCorner(
     context: CanvasRenderingContext2D,
     cursorX: number,
-    cursorY: number
+    cursorY: number,
   ): boolean {
     const centerX = this.x + this.w / 2;
     const centerY = this.y + this.h / 2;

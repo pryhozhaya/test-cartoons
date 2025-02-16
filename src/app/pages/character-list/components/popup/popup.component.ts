@@ -22,12 +22,12 @@ import {
   scan,
   switchMap,
   takeUntil,
-  tap
+  tap,
 } from "rxjs";
 import { Rectangle2D } from "../../../../classes/rectangle.class";
 
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { MatButtonModule } from '@angular/material/button';
+import { MatButtonModule } from "@angular/material/button";
 import { saveCharactersCanvas } from "../../../../store/character.actions";
 import {
   selectCharacterCanvasById,
@@ -73,17 +73,17 @@ export class PopupComponent implements OnInit, OnDestroy {
   private canvasRef =
     viewChild.required<ElementRef<HTMLCanvasElement>>("canvas");
   private canvas = computed<HTMLCanvasElement>(
-    () => this.canvasRef().nativeElement
+    () => this.canvasRef().nativeElement,
   );
   private context = computed<CanvasRenderingContext2D>(
-    () => this.canvas().getContext("2d") as CanvasRenderingContext2D
+    () => this.canvas().getContext("2d") as CanvasRenderingContext2D,
   );
 
   ngOnInit(): void {
     this.store
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        select(selectCharacterCanvasById(this.data.id))
+        select(selectCharacterCanvasById(this.data.id)),
       )
       .subscribe((charactersCanvas) => {
         charactersCanvas?.canvas.forEach((shape) => {
@@ -120,7 +120,7 @@ export class PopupComponent implements OnInit, OnDestroy {
 
   protected saveCanvas(): void {
     const index = this.allCharactersCanvas.findIndex(
-      (item) => item.characterId === this.data.id
+      (item) => item.characterId === this.data.id,
     );
     const updatedCanvas: CharacterCanvas = {
       characterId: this.data.id,
@@ -173,11 +173,11 @@ export class PopupComponent implements OnInit, OnDestroy {
                 event.offsetX - x,
                 event.offsetY - y,
                 0,
-                this.color
+                this.color,
               );
               this.clearCanvas();
               this.objectCollection.forEach((shape) =>
-                shape.redraw(this.context())
+                shape.redraw(this.context()),
               );
               newRect.redraw(this.context());
               return newRect;
@@ -186,16 +186,16 @@ export class PopupComponent implements OnInit, OnDestroy {
               mouseUp$.pipe(
                 tap(() => {
                   this.state = CanvaState.idle;
-                })
-              )
+                }),
+              ),
             ),
             finalizeWithValue((rect) => {
               if (rect) {
                 this.objectCollection.push(rect);
               }
-            })
-          )
-        )
+            }),
+          ),
+        ),
       )
       .subscribe();
 
@@ -205,19 +205,19 @@ export class PopupComponent implements OnInit, OnDestroy {
         filter(() => this.state !== CanvaState.drag),
         map((event) => {
           const moveItem = this.objectCollection.find((item) =>
-            item.isCursorInside(this.context(), event.offsetX, event.offsetY)
+            item.isCursorInside(this.context(), event.offsetX, event.offsetY),
           );
           const rotateItem = this.objectCollection.find((item) =>
             item.isCursorNearCorner(
               this.context(),
               event.offsetX,
-              event.offsetY
-            )
+              event.offsetY,
+            ),
           );
 
           return moveItem ? "move" : rotateItem ? "rotate" : null;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((currentItem) => {
         switch (currentItem) {
@@ -246,8 +246,8 @@ export class PopupComponent implements OnInit, OnDestroy {
             item.isCursorInside(
               this.context(),
               downEvent.offsetX,
-              downEvent.offsetY
-            )
+              downEvent.offsetY,
+            ),
           );
           if (!currentItem) {
             return EMPTY;
@@ -260,15 +260,15 @@ export class PopupComponent implements OnInit, OnDestroy {
             tap((moveEvent) => {
               currentItem.move(
                 moveEvent.offsetX - offsetX - currentItem.x,
-                moveEvent.offsetY - offsetY - currentItem.y
+                moveEvent.offsetY - offsetY - currentItem.y,
               );
 
               this.drawItemCollection();
             }),
-            takeUntil(mouseUp$.pipe(tap(() => (this.state = CanvaState.idle))))
+            takeUntil(mouseUp$.pipe(tap(() => (this.state = CanvaState.idle)))),
           );
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
 
@@ -284,8 +284,8 @@ export class PopupComponent implements OnInit, OnDestroy {
             item.isCursorNearCorner(
               this.context(),
               downEvent.offsetX,
-              downEvent.offsetY
-            )
+              downEvent.offsetY,
+            ),
           );
           if (!currentItem) {
             return EMPTY;
@@ -297,7 +297,7 @@ export class PopupComponent implements OnInit, OnDestroy {
               this.clearCanvas();
               this.context().save();
               this.objectCollection.forEach((shape) =>
-                shape.redraw(this.context())
+                shape.redraw(this.context()),
               );
               currentItem.redraw(this.context());
               lastMouseX = moveEvent.clientX;
@@ -306,12 +306,12 @@ export class PopupComponent implements OnInit, OnDestroy {
               mouseUp$.pipe(
                 tap(() => {
                   this.state = CanvaState.idle;
-                })
-              )
-            )
+                }),
+              ),
+            ),
           );
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }

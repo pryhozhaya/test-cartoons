@@ -1,11 +1,18 @@
 <div class="card">
-  <img [src]="character.image" [alt]="character.name" class="card-img-top" (click)="openDialog()">
+  <img
+    [src]="character.image"
+    [alt]="character.name"
+    class="card-img-top"
+    (click)="openDialog()"
+  />
   <div class="card-body">
     <h5 class="card-title">{{ character.name }}</h5>
     <p class="card-text"><span>Status:</span> {{ character.status }}</p>
     <p class="card-text"><span>Species:</span> {{ character.species }}</p>
     <p class="card-text"><span>Gender:</span> {{ character.gender }}</p>
     <p class="card-text"><span>Origin:</span> {{ character.origin.name }}</p>
-    <p class="card-text"><span>Location:</span> {{ character.location.name }}</p>
+    <p class="card-text">
+      <span>Location:</span> {{ character.location.name }}
+    </p>
   </div>
 </div>

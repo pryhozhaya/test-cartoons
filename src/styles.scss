@@ -1,4 +1,4 @@
-@use '@angular/material' as mat;
+@use "@angular/material" as mat;
 
 :root {
   --green: #2ecc71;
@@ -11,9 +11,17 @@
 
   font-family: "Courier New", Courier, monospace;
 
-  @include mat.autocomplete-overrides((
-    background-color: var(--white),
-  ));
+  @include mat.autocomplete-overrides(
+    (
+      background-color: var(--white),
+    )
+  );
+
+  @include mat.progress-spinner-overrides(
+    (
+      active-indicator-color: var(--green),
+    )
+  );
 }
 
 .button {

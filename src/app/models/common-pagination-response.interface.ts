@@ -1,4 +1,3 @@
-
 export interface CommonPaginationResponse<T> {
   info: Info;
   results: T[];

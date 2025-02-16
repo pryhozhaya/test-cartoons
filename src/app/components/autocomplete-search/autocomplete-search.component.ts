@@ -42,24 +42,27 @@ export class AutocompleteSearchComponent implements OnInit {
   private store = inject(Store);
   private destroyRef = inject(DestroyRef);
 
-  
   protected readonly searchControl = new FormControl("");
-  protected readonly queries$ = combineLatest([this.store.select(selectQueries), this.searchControl.valueChanges]).pipe(
-    map(([queries,searchValue]) => {
-      return searchValue && searchValue.length > 0 ? queries.filter((query) => query.includes(searchValue)).slice(0, 7) : [];
-    })
+  protected readonly queries$ = combineLatest([
+    this.store.select(selectQueries),
+    this.searchControl.valueChanges,
+  ]).pipe(
+    map(([queries, searchValue]) => {
+      return searchValue && searchValue.length > 0
+        ? queries.filter((query) => query.includes(searchValue)).slice(0, 7)
+        : [];
+    }),
   );
-  
+
   ngOnInit() {
     this.searchControl.valueChanges
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         debounceTime(SEARCH_DELAY),
         tap((value) => {
-                this.store.dispatch(setSearchValue({ searchValue: value || ""  }));
-                this.store.dispatch(setPage({ page: 1 }));
-
-        })
+          this.store.dispatch(setSearchValue({ searchValue: value || "" }));
+          this.store.dispatch(setPage({ page: 1 }));
+        }),
       )
       .subscribe();
   }
