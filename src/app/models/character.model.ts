@@ -1,4 +1,3 @@
-import { Rectangle2D } from "../classes/rectangle.class";
 
 export interface Character {
   id: number;
@@ -15,17 +14,5 @@ export interface Character {
     url: string;
   };
   image: string;
-}
-export interface CharacterCanvas {
-  characterId: number;
-  canvas: Rectangle2D[]
-}
-
-export enum CanvaState {
-  idle = "idle",
-  drawing = "drawing",
-  moving = "moving",
-  rotating = "rotating",
-  drag = "drag"
 }
 

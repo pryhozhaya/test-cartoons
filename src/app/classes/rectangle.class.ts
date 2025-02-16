@@ -1,19 +1,20 @@
-import { CANVAS_COLORS, RECTANGLE_COLORS } from "../models/constants";
+import { CANVAS_COLORS, RECTANGLE_COLORS } from "../pages/character-list/constants/constants";
 import { Shape2D } from "./shape.class";
 
 export class Rectangle2D extends Shape2D {
   constructor(
-    x: number,
-    y: number,
+    public override x: number,
+    public override y: number,
     public w: number,
     public h: number,
     public angle: number,
-    color: string = RECTANGLE_COLORS.green
+    public override color: string = RECTANGLE_COLORS.green
   ) {
     super(x, y, color);
   }
 
   redraw(context: CanvasRenderingContext2D): void {
+    const rotatePoint = new Path2D();
     context.save();
     context.translate(this.x + this.w / 2, this.y + this.h / 2);
     context.rotate(this.angle);
@@ -21,13 +22,11 @@ export class Rectangle2D extends Shape2D {
     context.fillStyle = this.color;
     context.rect(-this.w / 2, -this.h / 2, this.w, this.h);
     context.fill();
-    console.log(this)
-    const circle = new Path2D();
-    circle.arc(-this.w / 2, -this.h / 2, 8, 0, 2 * Math.PI);
+    rotatePoint.arc(-this.w / 2, -this.h / 2, 8, 0, 2 * Math.PI);
     context.fillStyle = CANVAS_COLORS.blue;
-    context.fill(circle);
+    context.fill(rotatePoint);
     context.strokeStyle = CANVAS_COLORS.white;
-    context.stroke(circle);
+    context.stroke(rotatePoint);
     context.restore();
   }
 
@@ -42,8 +41,7 @@ export class Rectangle2D extends Shape2D {
     context.translate(this.x + this.w / 2, this.y + this.h / 2);
     context.rotate(this.angle);
     context.restore();
-    const mouseInside = context.isPointInPath(rect, cursorX, cursorY);
-    return mouseInside;
+    return context.isPointInPath(rect, cursorX, cursorY);
   }
 
   isCursorNearCorner(
@@ -61,8 +59,8 @@ export class Rectangle2D extends Shape2D {
       centerY +
       (this.x - centerX) * Math.sin(this.angle) +
       (this.y - centerY) * Math.cos(this.angle);
-    const circle = new Path2D();
-    circle.arc(rotatedX, rotatedY, 8, 0, 2 * Math.PI);
-    return context.isPointInPath(circle, cursorX, cursorY);
+    const rotatePoint = new Path2D();
+    rotatePoint.arc(rotatedX, rotatedY, 8, 0, 2 * Math.PI);
+    return context.isPointInPath(rotatePoint, cursorX, cursorY);
   }
 }

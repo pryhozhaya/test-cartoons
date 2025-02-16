@@ -6,11 +6,13 @@ export abstract class Shape2D {
   ) {}
 
   abstract redraw(context: CanvasRenderingContext2D): void;
+  
   abstract isCursorInside(
     context: CanvasRenderingContext2D,
     cursorX: number,
     cursorY: number
   ): boolean;
+  
   abstract isCursorNearCorner(
     context: CanvasRenderingContext2D,
     cursorX: number,
@@ -20,9 +22,5 @@ export abstract class Shape2D {
   move(dx: number, dy: number): void {
     this.x += dx;
     this.y += dy;
-  }
-
-  setColor(color: string): void {
-    this.color = color;
   }
 }

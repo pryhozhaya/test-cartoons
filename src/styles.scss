@@ -1,5 +1,6 @@
+@use '@angular/material' as mat;
+
 :root {
-  font-family: "Courier New", Courier, monospace;
   --green: #2ecc71;
   --blue: #3498db;
   --yellow: #f1c40f;
@@ -7,6 +8,12 @@
   --white: #ffffff;
   --gray: #9ca6a7;
   --black: #242424;
+
+  font-family: "Courier New", Courier, monospace;
+
+  @include mat.autocomplete-overrides((
+    background-color: var(--white),
+  ));
 }
 
 .button {
