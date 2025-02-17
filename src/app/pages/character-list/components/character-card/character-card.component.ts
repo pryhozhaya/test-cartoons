@@ -1,4 +1,4 @@
-import { CommonModule } from "@angular/common";
+import { CommonModule, NgOptimizedImage } from "@angular/common";
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Character } from "../../../../models/character.model";
@@ -6,7 +6,7 @@ import { PopupComponent } from "../popup/popup.component";
 
 @Component({
   selector: "app-character-card",
-  imports: [MatDialogModule, CommonModule, MatDialogModule],
+  imports: [MatDialogModule, CommonModule, MatDialogModule, NgOptimizedImage],
   templateUrl: "./character-card.component.html",
   styleUrl: "./character-card.component.scss",
   standalone: true,
@@ -14,7 +14,6 @@ import { PopupComponent } from "../popup/popup.component";
 })
 export class CharacterCardComponent {
   @Input({ required: true }) character!: Character;
-
   constructor(private dialog: MatDialog) {}
 
   openDialog() {

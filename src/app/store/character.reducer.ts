@@ -1,5 +1,5 @@
 import { EntityAdapter, EntityState, createEntityAdapter } from "@ngrx/entity";
-import { Action, createReducer, on } from "@ngrx/store";
+import { createReducer, on } from "@ngrx/store";
 import { Character } from "../models/character.model";
 import { Info } from "../models/common-pagination-response.interface";
 import { CharacterCanvas } from "../pages/character-list/models/character-canvas-models";
@@ -47,13 +47,11 @@ export const characterReducer = createReducer(
 
   on(loadCharacters, (state) => ({
     ...state,
-    // loading: true,
   })),
 
   on(loadCharactersSuccess, (state, { characters, info }) =>
     adapter.setAll(characters, {
       ...state,
-      // loading: false,
       info,
       error: null,
     }),
@@ -62,7 +60,6 @@ export const characterReducer = createReducer(
   on(loadCharactersFailure, (state, { error }) => ({
     ...state,
     error: error.message || "Error",
-    // loading: false,
   })),
 
   on(setPage, (state, { page }) => ({
@@ -85,10 +82,6 @@ export const characterReducer = createReducer(
     charactersCanvas,
   })),
 );
-
-export function reducer(state: CharactersState | undefined, action: Action) {
-  return characterReducer(state, action);
-}
 
 const { selectAll } = adapter.getSelectors();
 

@@ -28,7 +28,7 @@ export class CharacterEffects {
         this.store.pipe(select(selectSearchValue)),
       ]),
       switchMap(([_, page, name]) =>
-        this.characterService.getCharacters(name, page).pipe(
+        this.characterService.getCharacters(name ?? "", page).pipe(
           tap(() => {
             if (name && name.length >= 4) {
               this.store.dispatch(saveSearchQuery({ name }));

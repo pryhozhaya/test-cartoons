@@ -1,55 +1,47 @@
-import {
-  ActionReducerMap,
-  createFeatureSelector,
-  createSelector,
-} from "@ngrx/store";
+import { createFeatureSelector, createSelector } from "@ngrx/store";
 import { CharacterCanvas } from "../pages/character-list/models/character-canvas-models";
-import * as charactersStore from "./character.reducer";
+import * as CharactersStore from "./character.reducer";
 
 export interface State {
-  characters: charactersStore.CharactersState;
+  characters: CharactersStore.CharactersState;
 }
 
-export const reducers: ActionReducerMap<State> = {
-  characters: charactersStore.reducer,
-};
-
 export const selectCharactersState =
-  createFeatureSelector<charactersStore.CharactersState>("characters");
+  createFeatureSelector<CharactersStore.CharactersState>("characters");
 
 export const selectCharacters = createSelector(
   selectCharactersState,
-  charactersStore.selectAllCharacters,
+  CharactersStore.selectAllCharacters,
 );
 
 export const selectQueries = createSelector(
   selectCharactersState,
-  charactersStore.selectQueries,
+  CharactersStore.selectQueries,
 );
 
 export const selectInfo = createSelector(
   selectCharactersState,
-  charactersStore.selectInfo,
+  CharactersStore.selectInfo,
 );
 
 export const selectLoading = createSelector(
   selectCharactersState,
-  charactersStore.selectLoading,
+  CharactersStore.selectLoading,
 );
 
 export const selectPage = createSelector(
   selectCharactersState,
-  charactersStore.selectPage,
+  CharactersStore.selectPage,
 );
 
 export const selectSearchValue = createSelector(
   selectCharactersState,
-  charactersStore.selectSearchValue,
+  CharactersStore.selectSearchValue,
 );
 
 export const selectError = createSelector(
   selectCharactersState,
-  charactersStore.selectError,
+  CharactersStore.selectError,
 );
 
 export const selectPageAndTotalPage = createSelector(
@@ -63,7 +55,7 @@ export const selectPageAndTotalPage = createSelector(
 
 export const selectCharactersCanvas = createSelector(
   selectCharactersState,
-  charactersStore.selectCharactersCanvas,
+  CharactersStore.selectCharactersCanvas,
 );
 
 export const selectCharacterCanvasById = (id: number) =>

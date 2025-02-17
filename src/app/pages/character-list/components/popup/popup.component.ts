@@ -273,8 +273,6 @@ export class PopupComponent implements OnInit, OnDestroy {
       .subscribe();
 
     // Rotating logic
-    let lastMouseX = 0;
-
     mouseDown$
       .pipe(
         filter(() => this.state === CanvaState.rotating),
@@ -290,9 +288,10 @@ export class PopupComponent implements OnInit, OnDestroy {
           if (!currentItem) {
             return EMPTY;
           }
+
           return mouseMove$.pipe(
-            tap((moveEvent) => {
-              let dx = moveEvent.clientX - lastMouseX;
+            scan((previous, moveEvent) => {
+              const dx = moveEvent.clientX - previous.clientX;
               currentItem.angle += dx * ROTATE_SPEED;
               this.clearCanvas();
               this.context().save();
@@ -300,8 +299,8 @@ export class PopupComponent implements OnInit, OnDestroy {
                 shape.redraw(this.context()),
               );
               currentItem.redraw(this.context());
-              lastMouseX = moveEvent.clientX;
-            }),
+              return moveEvent;
+            }, downEvent),
             takeUntil(
               mouseUp$.pipe(
                 tap(() => {

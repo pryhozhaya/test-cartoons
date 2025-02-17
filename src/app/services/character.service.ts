@@ -1,9 +1,9 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
+import { environment } from "../../environments/environment.development";
 import { Character } from "../models/character.model";
 import { CommonPaginationResponse } from "../models/common-pagination-response.interface";
-import { environment } from "../../environments/environment.development";
 
 @Injectable({
   providedIn: "root",
@@ -12,14 +12,16 @@ export class CharacterService {
   private http = inject(HttpClient);
 
   getCharacters(
-    name: string | null,
+    name: string,
     page: number,
   ): Observable<CommonPaginationResponse<Character>> {
-    let params = new HttpParams();
-    if (name) {
-      params = params.set("name", name);
-    }
-    params = params.set("page", page);
+    const params = new HttpParams({
+      fromObject: Object.fromEntries(
+        Object.entries({ name, page: page.toString() }) // Приводим page к строке
+          .filter(([_, v]) => v !== null), // Убираем null
+      ),
+    });
+
     return this.http.get<CommonPaginationResponse<Character>>(
       environment.baseUrlAPI,
       { params },

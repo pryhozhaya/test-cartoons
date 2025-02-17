@@ -1,10 +1,14 @@
 <div class="card">
-  <img
-    [src]="character.image"
-    [alt]="character.name"
-    class="card-img-top"
-    (click)="openDialog()"
-  />
+  <div class="img-container">
+    <img
+      priority
+      fill
+      [ngSrc]="character.image"
+      [alt]="character.name"
+      (click)="openDialog()"
+    />
+  </div>
+
   <div class="card-body">
     <h5 class="card-title">{{ character.name }}</h5>
     <p class="card-text"><span>Status:</span> {{ character.status }}</p>
