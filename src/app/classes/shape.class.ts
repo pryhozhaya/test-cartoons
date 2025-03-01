@@ -18,9 +18,4 @@ export abstract class Shape2D {
     cursorX: number,
     cursorY: number,
   ): boolean;
-
-  move(dx: number, dy: number): void {
-    this.x += dx;
-    this.y += dy;
-  }
 }

@@ -14,31 +14,14 @@ import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MAT_DIALOG_DATA, MatDialogModule } from "@angular/material/dialog";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { select, Store } from "@ngrx/store";
-import {
-  EMPTY,
-  filter,
-  fromEvent,
-  map,
-  scan,
-  switchMap,
-  takeUntil,
-  tap,
-} from "rxjs";
-import { Rectangle2D } from "../../../../classes/rectangle.class";
+import { EMPTY, filter, fromEvent, map, switchMap, takeUntil, tap } from "rxjs";
+import { Point, Poligon } from "../../../../classes/rectangle.class";
 
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { MatButtonModule } from "@angular/material/button";
 import { saveCharactersCanvas } from "../../../../store/character.actions";
-import {
-  selectCharacterCanvasById,
-  selectCharactersCanvas,
-} from "../../../../store/character.selectors";
-import { finalizeWithValue } from "../../../../utils/rxjs-operator";
-import {
-  CanvaState,
-  RECTANGLE_COLORS,
-  ROTATE_SPEED,
-} from "../../constants/constants";
+import { selectCharacterCanvasById, selectCharactersCanvas } from "../../../../store/character.selectors";
+import { CanvaState, RECTANGLE_COLORS } from "../../constants/constants";
 import { CharacterCanvas } from "../../models/character-canvas-models";
 
 @Component({
@@ -64,7 +47,7 @@ export class PopupComponent implements OnInit, OnDestroy {
 
   private allCharactersCanvas$ = this.store.select(selectCharactersCanvas);
   private allCharactersCanvas: CharacterCanvas[] = [];
-  private objectCollection: Rectangle2D[] = [];
+  private objectCollection: Poligon[] = [];
   private state: CanvaState = CanvaState.idle;
 
   protected readonly rectangleColors = RECTANGLE_COLORS;
@@ -73,23 +56,23 @@ export class PopupComponent implements OnInit, OnDestroy {
   private canvasRef =
     viewChild.required<ElementRef<HTMLCanvasElement>>("canvas");
   private canvas = computed<HTMLCanvasElement>(
-    () => this.canvasRef().nativeElement,
+    () => this.canvasRef().nativeElement
   );
   private context = computed<CanvasRenderingContext2D>(
-    () => this.canvas().getContext("2d") as CanvasRenderingContext2D,
+    () => this.canvas().getContext("2d") as CanvasRenderingContext2D
   );
 
   ngOnInit(): void {
     this.store
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        select(selectCharacterCanvasById(this.data.id)),
+        select(selectCharacterCanvasById(this.data.id))
       )
       .subscribe((charactersCanvas) => {
         charactersCanvas?.canvas.forEach((shape) => {
-          const { x, y, w, h, angle, color } = shape;
-          const newRect = new Rectangle2D(x, y, w, h, angle, color);
-          this.objectCollection.push(newRect);
+          const { points, angle, color } = shape;
+          const newPoligon = new Poligon(points, angle, color);
+          this.objectCollection.push(newPoligon);
         });
       });
 
@@ -106,8 +89,9 @@ export class PopupComponent implements OnInit, OnDestroy {
   }
 
   get color(): string {
-    return this.colorControl.value || RECTANGLE_COLORS.green;
+    return this.colorControl.value || RECTANGLE_COLORS.blue;
   }
+
 
   ngOnDestroy(): void {
     this.saveCanvas();
@@ -120,7 +104,7 @@ export class PopupComponent implements OnInit, OnDestroy {
 
   protected saveCanvas(): void {
     const index = this.allCharactersCanvas.findIndex(
-      (item) => item.characterId === this.data.id,
+      (item) => item.characterId === this.data.id
     );
     const updatedCanvas: CharacterCanvas = {
       characterId: this.data.id,
@@ -143,9 +127,49 @@ export class PopupComponent implements OnInit, OnDestroy {
     this.context().clearRect(0, 0, this.canvas().width, this.canvas().height);
   }
 
+  saveCanvasImageAsJpeg(quality = 0.92) {
+    this.clearCanvas();
+    const base_image = new Image();
+    base_image.crossOrigin = "anonymous";
+    base_image.src = this.data.image;
+    base_image.onload = () => {
+      console.log(this.canvas().width, this.canvas().height);
+      this.context().drawImage(
+        base_image,
+        0,
+        0,
+        this.canvas().width,
+        this.canvas().height
+      );
+      this.objectCollection.forEach((poligon) =>
+        poligon.redraw(this.context())
+      );
+
+      const link = document.createElement("a");
+      link.download = "canvas-image.png";
+      link.href = this.canvas().toDataURL("image/png", quality);
+      link.click();
+      link.remove();
+    };
+  }
+
+  private isNearFirstPoint(
+    drawningPoligon: Point[],
+    x: number,
+    y: number
+  ): boolean {
+    const startPointRadius = 10;
+    const firstPoint = drawningPoligon[0];
+    const distance = Math.sqrt(
+      Math.pow(x - firstPoint.x, 2) + Math.pow(y - firstPoint.y, 2)
+    );
+
+    return distance <= startPointRadius;
+  }
+
   private drawItemCollection(): void {
     this.clearCanvas();
-    this.objectCollection.forEach((shape) => shape.redraw(this.context()));
+    this.objectCollection.forEach((poligon) => poligon.redraw(this.context()));
   }
 
   private setCanvasScale(): void {
@@ -158,66 +182,104 @@ export class PopupComponent implements OnInit, OnDestroy {
     const mouseDown$ = fromEvent<MouseEvent>(this.canvas(), "mousedown");
     const mouseMove$ = fromEvent<MouseEvent>(this.canvas(), "mousemove");
     const mouseUp$ = fromEvent<MouseEvent>(document, "mouseup");
+    let drawningPoligon: Point[] = [];
 
     // Drawing logic
     mouseDown$
       .pipe(
-        filter(() => this.state === CanvaState.idle),
+        filter(
+          () =>
+            this.state === CanvaState.idle || this.state === CanvaState.drawing
+        ),
+
         map((event) => ({ x: event.offsetX, y: event.offsetY })),
+        tap(({ x, y }) => {
+          if (this.state === CanvaState.idle) {
+            this.state = CanvaState.drawing;
+            drawningPoligon.push({ x, y });
+
+            this.context().beginPath();
+            this.context().moveTo(x, y);
+            this.context().fillStyle = `rgba(${this.color}, 0.5)`;
+            this.context().lineWidth = 2;
+            this.context().strokeStyle = `rgba(${this.color})`;
+          } else {
+            if (this.isNearFirstPoint(drawningPoligon, x, y)) {
+              this.context().closePath();
+              this.context().stroke();
+              this.context().fill();
+              const newPoligon = new Poligon(drawningPoligon, 0, this.color);
+              this.objectCollection.push(newPoligon);
+              this.state = CanvaState.idle;
+              drawningPoligon = [];
+              this.drawItemCollection();
+            } else {
+              drawningPoligon.push({ x, y });
+
+              this.drawItemCollection();
+
+              drawningPoligon.forEach((point, index) => {
+                if (index === 0) {
+                  this.context().moveTo(point.x, point.y);
+                } else {
+                  this.context().lineTo(point.x, point.y);
+                }
+              });
+              this.context().stroke();
+            }
+          }
+        }),
         switchMap(({ x, y }) =>
           mouseMove$.pipe(
-            scan((rect: Rectangle2D | null, event: MouseEvent) => {
-              const newRect = new Rectangle2D(
-                x,
-                y,
-                event.offsetX - x,
-                event.offsetY - y,
-                0,
-                this.color,
-              );
-              this.clearCanvas();
-              this.objectCollection.forEach((shape) =>
-                shape.redraw(this.context()),
-              );
-              newRect.redraw(this.context());
-              return newRect;
-            }, null),
-            takeUntil(
-              mouseUp$.pipe(
-                tap(() => {
-                  this.state = CanvaState.idle;
-                }),
-              ),
-            ),
-            finalizeWithValue((rect) => {
-              if (rect) {
-                this.objectCollection.push(rect);
-              }
-            }),
-          ),
-        ),
+            filter(() => this.state === CanvaState.drawing),
+            map((event) => ({
+              xCurrent: event.offsetX,
+              yCurrent: event.offsetY,
+            })),
+            tap(({ xCurrent, yCurrent }) => {
+              const lastPoint = drawningPoligon.at(-1) || { x, y };
+              this.drawItemCollection();
+
+              this.context().beginPath();
+              drawningPoligon.forEach((point, index) => {
+                if (index === 0) {
+                  this.context().moveTo(point.x, point.y);
+                } else {
+                  this.context().lineTo(point.x, point.y);
+                }
+              });
+              this.context().stroke();
+              this.context().moveTo(lastPoint.x, lastPoint.y);
+              this.context().lineTo(xCurrent, yCurrent);
+              this.context().stroke();
+            })
+          )
+        )
       )
       .subscribe();
 
     // Cursor and state management
     mouseMove$
       .pipe(
-        filter(() => this.state !== CanvaState.drag),
+        filter(
+          () =>
+            this.state !== CanvaState.drag && this.state !== CanvaState.drawing
+        ),
         map((event) => {
           const moveItem = this.objectCollection.find((item) =>
-            item.isCursorInside(this.context(), event.offsetX, event.offsetY),
+            item.isCursorInside(this.context(), event.offsetX, event.offsetY)
           );
           const rotateItem = this.objectCollection.find((item) =>
             item.isCursorNearCorner(
               this.context(),
               event.offsetX,
-              event.offsetY,
-            ),
+              event.offsetY
+            )
           );
 
           return moveItem ? "move" : rotateItem ? "rotate" : null;
         }),
-        takeUntilDestroyed(this.destroyRef),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((currentItem) => {
         switch (currentItem) {
@@ -246,29 +308,33 @@ export class PopupComponent implements OnInit, OnDestroy {
             item.isCursorInside(
               this.context(),
               downEvent.offsetX,
-              downEvent.offsetY,
-            ),
+              downEvent.offsetY
+            )
           );
-          if (!currentItem) {
+          if (currentItem) {
+            currentItem.createFrame(this.context());
+          } else {
             return EMPTY;
           }
 
-          const offsetX = downEvent.offsetX - currentItem.x;
-          const offsetY = downEvent.offsetY - currentItem.y;
+          let previousOffsetX = downEvent.offsetX,
+            previousOffsetY = downEvent.offsetY;
 
           return mouseMove$.pipe(
             tap((moveEvent) => {
-              currentItem.move(
-                moveEvent.offsetX - offsetX - currentItem.x,
-                moveEvent.offsetY - offsetY - currentItem.y,
-              );
+              const dx = moveEvent.offsetX - previousOffsetX;
+              const dy = moveEvent.offsetY - previousOffsetY;
+              previousOffsetX = moveEvent.offsetX;
+              previousOffsetY = moveEvent.offsetY;
+              currentItem.move(dx, dy);
 
               this.drawItemCollection();
+              currentItem.createFrame(this.context());
             }),
-            takeUntil(mouseUp$.pipe(tap(() => (this.state = CanvaState.idle)))),
+            takeUntil(mouseUp$.pipe(tap(() => (this.state = CanvaState.idle))))
           );
         }),
-        takeUntilDestroyed(this.destroyRef),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe();
 
@@ -276,41 +342,55 @@ export class PopupComponent implements OnInit, OnDestroy {
     mouseDown$
       .pipe(
         filter(() => this.state === CanvaState.rotating),
+
         switchMap((downEvent) => {
           this.state = CanvaState.drag;
           const currentItem = this.objectCollection.find((item) =>
             item.isCursorNearCorner(
               this.context(),
               downEvent.offsetX,
-              downEvent.offsetY,
-            ),
+              downEvent.offsetY
+            )
           );
           if (!currentItem) {
             return EMPTY;
           }
 
           return mouseMove$.pipe(
-            scan((previous, moveEvent) => {
-              const dx = moveEvent.clientX - previous.clientX;
-              currentItem.angle += dx * ROTATE_SPEED;
+            tap((moveEvent) => {
+              const targetX = moveEvent.offsetX;
+              const targetY = moveEvent.offsetY;
+              const minMaxPoints = currentItem.keyPoints;
+
+              const dx1 = minMaxPoints.minX - minMaxPoints.centerX;
+              const dy1 = minMaxPoints.minY - minMaxPoints.centerY;
+
+              const dx2 = targetX - minMaxPoints.centerX;
+              const dy2 = targetY - minMaxPoints.centerY;
+
+              const angle = Math.atan2(dy2, dx2) - Math.atan2(dy1, dx1);
+
+              currentItem.angle = angle;
               this.clearCanvas();
               this.context().save();
               this.objectCollection.forEach((shape) =>
-                shape.redraw(this.context()),
+                shape.redraw(this.context())
               );
               currentItem.redraw(this.context());
-              return moveEvent;
-            }, downEvent),
+              currentItem.createFrame(this.context());
+
+            }),
+
             takeUntil(
               mouseUp$.pipe(
                 tap(() => {
                   this.state = CanvaState.idle;
-                }),
-              ),
-            ),
+                })
+              )
+            )
           );
         }),
-        takeUntilDestroyed(this.destroyRef),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe();
   }

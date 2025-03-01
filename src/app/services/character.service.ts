@@ -17,8 +17,8 @@ export class CharacterService {
   ): Observable<CommonPaginationResponse<Character>> {
     const params = new HttpParams({
       fromObject: Object.fromEntries(
-        Object.entries({ name, page: page.toString() }) // Приводим page к строке
-          .filter(([_, v]) => v !== null), // Убираем null
+        Object.entries({ name, page: page.toString() })
+          .filter(([_, v]) => v !== null),
       ),
     });
 
