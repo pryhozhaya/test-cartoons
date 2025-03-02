@@ -40,10 +40,7 @@ export class Poligon {
   }
 
   move(dx: number, dy: number): void {
-    this.points.forEach((point) => {
-      point.x += dx;
-      point.y += dy;
-    });
+    this.points = this.points.map((point) => ({ x: point.x + dx, y: point.y + dy }));
   }
 
   isCursorInside(
@@ -52,7 +49,7 @@ export class Poligon {
     cursorY: number
   ): boolean {
     const path = new Path2D();
-    context.save();
+    // context.save();
     const { centerX, centerY } = this.keyPoints;
 
     const rotatedPoints = this.points.map((point) => {
@@ -73,7 +70,7 @@ export class Poligon {
     });
     path.closePath();
 
-    context.restore();
+    // context.restore();
     return context.isPointInPath(path, cursorX, cursorY);
   }
 
@@ -141,7 +138,7 @@ export class Poligon {
     cursorX: number,
     cursorY: number,
   ): boolean {
-    const { minX, maxX, centerX,  minY, maxY, centerY } = this.keyPoints;
+    const { minX, centerX,  minY, centerY } = this.keyPoints;
     const rotatedX =
       centerX +
       (minX - centerX) * Math.cos(this.angle) -

@@ -1,12 +1,12 @@
 import { CommonModule, NgOptimizedImage } from "@angular/common";
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { MatDialog, MatDialogModule } from "@angular/material/dialog";
+import { MatDialogModule } from "@angular/material/dialog";
 import { Character } from "../../../../models/character.model";
 import { PopupComponent } from "../popup/popup.component";
 
 @Component({
   selector: "app-character-card",
-  imports: [MatDialogModule, CommonModule, MatDialogModule, NgOptimizedImage],
+  imports: [MatDialogModule, CommonModule, MatDialogModule, NgOptimizedImage, PopupComponent],
   templateUrl: "./character-card.component.html",
   styleUrl: "./character-card.component.scss",
   standalone: true,
@@ -14,11 +14,14 @@ import { PopupComponent } from "../popup/popup.component";
 })
 export class CharacterCardComponent {
   @Input({ required: true }) character!: Character;
-  constructor(private dialog: MatDialog) {}
 
-  openDialog() {
-    this.dialog.open(PopupComponent, {
-      data: this.character,
-    });
+  isPopupOpen = false;
+
+  openPopup() {
+    this.isPopupOpen = true;
+  }
+
+  onPopupStateChange(isOpen: boolean) {
+    this.isPopupOpen = isOpen;
   }
 }

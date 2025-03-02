@@ -1,24 +1,32 @@
-<div mat-dialog-content>
-  <div class="canvas-container">
-    <canvas #canvas width="400" height="400"></canvas>
-  </div>
-</div>
-<div mat-dialog-actions class="popup-actions">
-  <div class="custom-radios">
-    @for (color of rectangleColors | keyvalue; track $index) {
-      <div>
-        <label>
-          <input
-            type="radio"
-            name="color"
-            [value]="color.value"
-            [formControl]="colorControl"
-          />
-          <span [id]="color.key" class="radio-color"> </span>
-        </label>
+<div class="overlay" (mousedown)="closePopup()">
+  <div #popup class="popup" (mousedown)="$event.stopPropagation()">
+    <!-- <div #resizer class="resizer"></div> -->
+    <div class="canvas-container">
+      <canvas
+        #canvas
+        [style.transform]="'scale(' + scaleValue() + ')'"
+      ></canvas>
+    </div>
+    <div class="popup-actions">
+      <div class="custom-radios">
+        @for (color of rectangleColors | keyvalue; track $index) {
+        <div>
+          <label>
+            <input
+              type="radio"
+              name="color"
+              [value]="color.value"
+              [formControl]="colorControl"
+            />
+            <span [id]="color.key" class="radio-color"> </span>
+          </label>
+        </div>
+        }
       </div>
-    }
+      <div class="button-container">
+        <button class="button" (click)="reset()">Reset</button>
+        <button class="button" (click)="saveCanvasImageAsJpeg()">Save</button>
+      </div>
+    </div>
   </div>
-  <button class="button" (click)="reset()">Reset</button>
-  <button class="button" (click)="saveCanvasImageAsJpeg()">Save</button>
 </div>

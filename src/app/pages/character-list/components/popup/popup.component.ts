@@ -5,54 +5,56 @@ import {
   computed,
   DestroyRef,
   ElementRef,
+  EventEmitter,
   inject,
+  Input,
   OnDestroy,
   OnInit,
+  Output,
+  Renderer2,
+  signal,
   viewChild,
 } from "@angular/core";
 import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { MAT_DIALOG_DATA, MatDialogModule } from "@angular/material/dialog";
-import { MatFormFieldModule } from "@angular/material/form-field";
 import { select, Store } from "@ngrx/store";
-import { EMPTY, filter, fromEvent, map, switchMap, takeUntil, tap } from "rxjs";
+import { EMPTY, filter, fromEvent, map, switchMap, takeUntil, tap, throttleTime } from "rxjs";
 import { Point, Poligon } from "../../../../classes/rectangle.class";
 
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { MatButtonModule } from "@angular/material/button";
 import { saveCharactersCanvas } from "../../../../store/character.actions";
-import { selectCharacterCanvasById, selectCharactersCanvas } from "../../../../store/character.selectors";
+import {
+  selectCharacterCanvasById,
+  selectCharactersCanvas,
+} from "../../../../store/character.selectors";
 import { CanvaState, RECTANGLE_COLORS } from "../../constants/constants";
 import { CharacterCanvas } from "../../models/character-canvas-models";
 
 @Component({
   selector: "app-popup",
-  imports: [
-    KeyValuePipe,
-    MatDialogModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-  ],
+  imports: [KeyValuePipe, FormsModule, ReactiveFormsModule],
   templateUrl: "./popup.component.html",
   styleUrl: "./popup.component.scss",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PopupComponent implements OnInit, OnDestroy {
-  private data = inject(MAT_DIALOG_DATA);
-  private destroyRef = inject(DestroyRef);
-  private store = inject(Store);
+  @Input() data: any;
+  @Output() isOpenChange = new EventEmitter<boolean>();
 
-  private allCharactersCanvas$ = this.store.select(selectCharactersCanvas);
-  private allCharactersCanvas: CharacterCanvas[] = [];
-  private objectCollection: Poligon[] = [];
-  private state: CanvaState = CanvaState.idle;
+  public scaleValue = signal<number>(1);
 
   protected readonly rectangleColors = RECTANGLE_COLORS;
   protected colorControl = new FormControl(this.rectangleColors.blue);
 
+  private destroyRef = inject(DestroyRef);
+  private store = inject(Store);
+  private renderer = inject(Renderer2);
+
+  private initialWidth = 0;
+  private allCharactersCanvas$ = this.store.select(selectCharactersCanvas);
+  private allCharactersCanvas: CharacterCanvas[] = [];
+  private objectCollection: Poligon[] = [];
+  private state: CanvaState = CanvaState.idle;
   private canvasRef =
     viewChild.required<ElementRef<HTMLCanvasElement>>("canvas");
   private canvas = computed<HTMLCanvasElement>(
@@ -61,8 +63,11 @@ export class PopupComponent implements OnInit, OnDestroy {
   private context = computed<CanvasRenderingContext2D>(
     () => this.canvas().getContext("2d") as CanvasRenderingContext2D
   );
+  private popupRef = viewChild.required<ElementRef<HTMLElement>>("popup");
+  private popup = computed<HTMLElement>(() => this.popupRef().nativeElement);
 
   ngOnInit(): void {
+    this.configureCanvas();
     this.store
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -81,10 +86,7 @@ export class PopupComponent implements OnInit, OnDestroy {
       .subscribe((charactersCanvas) => {
         this.allCharactersCanvas = [...charactersCanvas];
       });
-
-    this.setCanvasScale();
-    this.canvas().style.backgroundImage = `url(${this.data.image})`;
-    this.objectCollection.forEach((shape) => shape.redraw(this.context()));
+    this.drawItemCollection();
     this.mouseEventSubscription();
   }
 
@@ -92,9 +94,12 @@ export class PopupComponent implements OnInit, OnDestroy {
     return this.colorControl.value || RECTANGLE_COLORS.blue;
   }
 
-
   ngOnDestroy(): void {
     this.saveCanvas();
+  }
+
+  public closePopup() {
+    this.isOpenChange.emit(false);
   }
 
   protected reset(): void {
@@ -123,17 +128,32 @@ export class PopupComponent implements OnInit, OnDestroy {
     this.store.dispatch(saveCharactersCanvas({ charactersCanvas }));
   }
 
+  private configureCanvas(): void {
+    this.initialWidth = this.popup().offsetWidth;
+    const newWidth = this.initialWidth - 40;
+    const newHeight = this.popup().offsetHeight - 100;
+    this.renderer.setStyle(this.canvas(), "width", `${newWidth}px`);
+    this.renderer.setStyle(this.canvas(), "height", `${newHeight}px`);
+    this.canvas().style.backgroundImage = `url(${this.data.image})`;
+    this.setCanvasScale();
+
+    fromEvent(window, "resize")
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.scaleValue.set(this.popup().offsetWidth / this.initialWidth);
+      });
+    }
+
   private clearCanvas(): void {
     this.context().clearRect(0, 0, this.canvas().width, this.canvas().height);
   }
 
-  saveCanvasImageAsJpeg(quality = 0.92) {
+  public saveCanvasImageAsJpeg(quality = 0.92) {
     this.clearCanvas();
     const base_image = new Image();
     base_image.crossOrigin = "anonymous";
     base_image.src = this.data.image;
     base_image.onload = () => {
-      console.log(this.canvas().width, this.canvas().height);
       this.context().drawImage(
         base_image,
         0,
@@ -175,7 +195,7 @@ export class PopupComponent implements OnInit, OnDestroy {
   private setCanvasScale(): void {
     const scale = window.devicePixelRatio;
     this.canvas().width = this.canvas().clientWidth * scale;
-    this.canvas().height = this.canvas().clientHeight * scale + 50;
+    this.canvas().height = this.canvas().clientHeight * scale;
   }
 
   private mouseEventSubscription() {
@@ -194,15 +214,14 @@ export class PopupComponent implements OnInit, OnDestroy {
 
         map((event) => ({ x: event.offsetX, y: event.offsetY })),
         tap(({ x, y }) => {
+          this.context().fillStyle = `rgba(${this.color}, 0.5)`;
+          this.context().lineWidth = 2;
+          this.context().strokeStyle = `rgba(${this.color})`;
           if (this.state === CanvaState.idle) {
             this.state = CanvaState.drawing;
             drawningPoligon.push({ x, y });
-
             this.context().beginPath();
             this.context().moveTo(x, y);
-            this.context().fillStyle = `rgba(${this.color}, 0.5)`;
-            this.context().lineWidth = 2;
-            this.context().strokeStyle = `rgba(${this.color})`;
           } else {
             if (this.isNearFirstPoint(drawningPoligon, x, y)) {
               this.context().closePath();
@@ -215,9 +234,6 @@ export class PopupComponent implements OnInit, OnDestroy {
               this.drawItemCollection();
             } else {
               drawningPoligon.push({ x, y });
-
-              this.drawItemCollection();
-
               drawningPoligon.forEach((point, index) => {
                 if (index === 0) {
                   this.context().moveTo(point.x, point.y);
@@ -231,6 +247,7 @@ export class PopupComponent implements OnInit, OnDestroy {
         }),
         switchMap(({ x, y }) =>
           mouseMove$.pipe(
+            throttleTime(16),
             filter(() => this.state === CanvaState.drawing),
             map((event) => ({
               xCurrent: event.offsetX,
@@ -239,7 +256,8 @@ export class PopupComponent implements OnInit, OnDestroy {
             tap(({ xCurrent, yCurrent }) => {
               const lastPoint = drawningPoligon.at(-1) || { x, y };
               this.drawItemCollection();
-
+              this.context().lineWidth = 2;
+              this.context().strokeStyle = `rgba(${this.color})`;
               this.context().beginPath();
               drawningPoligon.forEach((point, index) => {
                 if (index === 0) {
@@ -312,6 +330,7 @@ export class PopupComponent implements OnInit, OnDestroy {
             )
           );
           if (currentItem) {
+            this.drawItemCollection();
             currentItem.createFrame(this.context());
           } else {
             return EMPTY;
@@ -371,14 +390,10 @@ export class PopupComponent implements OnInit, OnDestroy {
               const angle = Math.atan2(dy2, dx2) - Math.atan2(dy1, dx1);
 
               currentItem.angle = angle;
-              this.clearCanvas();
-              this.context().save();
-              this.objectCollection.forEach((shape) =>
-                shape.redraw(this.context())
-              );
+
+              this.drawItemCollection();
               currentItem.redraw(this.context());
               currentItem.createFrame(this.context());
-
             }),
 
             takeUntil(
