@@ -39,6 +39,11 @@ export const selectSearchValue = createSelector(
   CharactersStore.selectSearchValue,
 );
 
+export const selectSelectedCharacter = createSelector(
+  selectCharactersState,
+  CharactersStore.selectSelectedCharacter,
+);
+
 export const selectError = createSelector(
   selectCharactersState,
   CharactersStore.selectError,

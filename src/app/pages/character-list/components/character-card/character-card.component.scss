@@ -1,24 +1,23 @@
 .card {
-  width: 300px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
   border: 1px solid #ddd;
+  padding: 0 20px;
   border-radius: 10px;
+  gap: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  height: 480px;
+  height: 280px;
 }
 
 .img-container {
-  width: 100%;
+  width: 200px;
   height: 200px;
-  position: relative;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
 
   img {
-    height: 100%;
-    width: 100%;
     object-fit: cover;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
+    border-radius: 10px;
   }
 }
 

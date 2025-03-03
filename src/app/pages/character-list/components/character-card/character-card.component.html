@@ -2,7 +2,8 @@
   <div class="img-container">
     <img
       priority
-      fill
+      width="200"
+      height="200"
       [ngSrc]="character.image"
       [alt]="character.name"
       (click)="openPopup()"
@@ -20,10 +21,4 @@
     </p>
   </div>
 </div>
-
-@if (isPopupOpen
-) {
-  <app-popup (isOpenChange)="onPopupStateChange($event)" [data]="character">
-  </app-popup>
-}
 

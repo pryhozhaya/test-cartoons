@@ -31,6 +31,11 @@ export const setSearchValue = createAction(
   props<{ searchValue: string }>(),
 );
 
+export const setSelectedCharacter = createAction(
+  "[Character] Set SelectedCharacter",
+  props<{ selectedCharacter: Character | null }>(),
+);
+
 export const saveCharactersCanvas = createAction(
   "[Character] Save Characters Canvas",
   props<{ charactersCanvas: CharacterCanvas[] }>(),

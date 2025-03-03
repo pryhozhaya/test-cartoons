@@ -1,12 +1,25 @@
 import { CommonModule, NgOptimizedImage } from "@angular/common";
-import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  Input,
+} from "@angular/core";
 import { MatDialogModule } from "@angular/material/dialog";
+import { Store } from "@ngrx/store";
 import { Character } from "../../../../models/character.model";
-import { PopupComponent } from "../popup/popup.component";
+import {
+  setSelectedCharacter
+} from "../../../../store/character.actions";
 
 @Component({
   selector: "app-character-card",
-  imports: [MatDialogModule, CommonModule, MatDialogModule, NgOptimizedImage, PopupComponent],
+  imports: [
+    MatDialogModule,
+    CommonModule,
+    MatDialogModule,
+    NgOptimizedImage,
+  ],
   templateUrl: "./character-card.component.html",
   styleUrl: "./character-card.component.scss",
   standalone: true,
@@ -14,14 +27,11 @@ import { PopupComponent } from "../popup/popup.component";
 })
 export class CharacterCardComponent {
   @Input({ required: true }) character!: Character;
-
-  isPopupOpen = false;
+  private store = inject(Store);
 
   openPopup() {
-    this.isPopupOpen = true;
-  }
-
-  onPopupStateChange(isOpen: boolean) {
-    this.isPopupOpen = isOpen;
+    this.store.dispatch(
+      setSelectedCharacter({ selectedCharacter: this.character || null })
+    );
   }
 }

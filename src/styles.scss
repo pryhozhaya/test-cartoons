@@ -1,5 +1,9 @@
 @use "@angular/material" as mat;
 
+body {
+  margin: 0;
+}
+
 :root {
   --green: #2ecc71;
   --blue: #3498db;

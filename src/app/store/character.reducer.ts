@@ -12,6 +12,7 @@ import {
   setLoading,
   setPage,
   setSearchValue,
+  setSelectedCharacter
 } from "./character.actions";
 
 export interface CharactersState extends EntityState<Character> {
@@ -21,6 +22,7 @@ export interface CharactersState extends EntityState<Character> {
   info: Info | null;
   page: number;
   searchValue: string | null;
+  selectedCharacter: Character| null;
   charactersCanvas: CharacterCanvas[];
 }
 
@@ -30,10 +32,12 @@ export const adapter: EntityAdapter<Character> =
 export const initialState: CharactersState = adapter.getInitialState({
   loading: false,
   queries: [],
+  entities: [],
   error: null,
   info: null,
   page: 1,
   searchValue: null,
+  selectedCharacter: null,
   charactersCanvas: [],
 });
 
@@ -50,11 +54,11 @@ export const characterReducer = createReducer(
   })),
 
   on(loadCharactersSuccess, (state, { characters, info }) =>
-    adapter.setAll(characters, {
+    adapter.addMany(characters, {
       ...state,
       info,
       error: null,
-    }),
+    })
   ),
 
   on(loadCharactersFailure, (state, { error }) => ({
@@ -72,6 +76,11 @@ export const characterReducer = createReducer(
     searchValue,
   })),
 
+  on(setSelectedCharacter, (state, { selectedCharacter }) => ({
+    ...state,
+    selectedCharacter,
+  })),
+
   on(setLoading, (state, { loading }) => ({
     ...state,
     loading,
@@ -80,7 +89,7 @@ export const characterReducer = createReducer(
   on(saveCharactersCanvas, (state, { charactersCanvas }) => ({
     ...state,
     charactersCanvas,
-  })),
+  }))
 );
 
 const { selectAll } = adapter.getSelectors();
@@ -93,5 +102,6 @@ export const selectLoading = (state: CharactersState) => state.loading;
 export const selectPage = (state: CharactersState) => state.page;
 export const selectSearchValue = (state: CharactersState) => state.searchValue;
 export const selectError = (state: CharactersState) => state.error;
+export const selectSelectedCharacter = (state: CharactersState) => state.selectedCharacter;
 export const selectCharactersCanvas = (state: CharactersState) =>
   state.charactersCanvas;

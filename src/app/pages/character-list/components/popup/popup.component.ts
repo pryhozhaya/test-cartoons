@@ -80,6 +80,7 @@ export class PopupComponent implements OnInit, OnDestroy {
   );
 
   ngOnInit(): void {
+    console.log(this.data);
     this.initResize();
     this.configureCanvas();
     this.store
@@ -130,28 +131,12 @@ export class PopupComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(mouseUp$))
         .subscribe((moveEvent) => {
           const newWidth = startWidth + (moveEvent.clientX - startX);
-          const newHeight = startHeight + (moveEvent.clientY - startY);
+          // const newHeight = startHeight + (moveEvent.clientY - startY);
+          console.log(this.canvas().offsetWidth);
           this.renderer.setStyle(this.popup(), "width", `${newWidth}px`);
-          this.renderer.setStyle(this.popup(), "height", `${newHeight}px`);
+          // this.renderer.setStyle(this.popup(), "height", `${newHeight}px`);
 
-          this.scaleValue.set(this.popup().offsetWidth / this.initialWidth);
-
-          // this.renderer.setStyle(this.canvas(), "width", `${newWidth - 40}px`);
-          // this.renderer.setStyle(
-          //   this.canvas(),
-          //   "height",
-          //   `${newHeight - 150}px`
-          // );
-
-          // console.log(this.canvas().width, this.canvas().height);
-          // this.objectCollection.map((poligon) => {
-          //   poligon.points.map((point) => {
-          //     point.x += deltaWidth;
-          //     point.y += deltaHeight;
-          //   })
-          // })
-          // this.setCanvasScale();
-          // this.drawItemCollection();
+          this.scaleValue.set((this.popup().offsetWidth / (this.initialWidth)));
         });
 
       mouseUp$.subscribe(() => moveSub.unsubscribe());
