@@ -1,12 +1,7 @@
 <div class="overlay" (mousedown)="closePopup()">
   <div #popup class="popup" (mousedown)="$event.stopPropagation()">
-    <!-- <div #resizer class="resizer"></div> -->
-    <div class="canvas-container">
-      <canvas
-        #canvas
-        [style.transform]="'scale(' + scaleValue() + ')'"
-      ></canvas>
-    </div>
+    <div #resizer class="resizer"></div>
+
     <div class="popup-actions">
       <div class="custom-radios">
         @for (color of rectangleColors | keyvalue; track $index) {
@@ -28,5 +23,12 @@
         <button class="button" (click)="saveCanvasImageAsJpeg()">Save</button>
       </div>
     </div>
+
+        <!-- <div class="canvas-container"> -->
+          <canvas
+          #canvas
+          [style.transform]="'scale(' + scaleValue() + ')'"
+        ></canvas>
+      <!-- </div> -->
   </div>
 </div>

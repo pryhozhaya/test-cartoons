@@ -17,7 +17,16 @@ import {
 } from "@angular/core";
 import { FormControl, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { select, Store } from "@ngrx/store";
-import { EMPTY, filter, fromEvent, map, switchMap, takeUntil, tap, throttleTime } from "rxjs";
+import {
+  EMPTY,
+  filter,
+  fromEvent,
+  map,
+  switchMap,
+  takeUntil,
+  tap,
+  throttleTime,
+} from "rxjs";
 import { Point, Poligon } from "../../../../classes/rectangle.class";
 
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -65,8 +74,13 @@ export class PopupComponent implements OnInit, OnDestroy {
   );
   private popupRef = viewChild.required<ElementRef<HTMLElement>>("popup");
   private popup = computed<HTMLElement>(() => this.popupRef().nativeElement);
+  private resizerRef = viewChild.required<ElementRef<HTMLElement>>("resizer");
+  private resizer = computed<HTMLElement>(
+    () => this.resizerRef().nativeElement
+  );
 
   ngOnInit(): void {
+    this.initResize();
     this.configureCanvas();
     this.store
       .pipe(
@@ -100,6 +114,48 @@ export class PopupComponent implements OnInit, OnDestroy {
 
   public closePopup() {
     this.isOpenChange.emit(false);
+  }
+
+  initResize() {
+    fromEvent<MouseEvent>(this.resizer(), "mousedown").subscribe((event) => {
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const startWidth = this.popup().offsetWidth;
+      const startHeight = this.popup().offsetHeight;
+
+      const mouseMove$ = fromEvent<MouseEvent>(document, "mousemove");
+      const mouseUp$ = fromEvent<MouseEvent>(document, "mouseup");
+
+      const moveSub = mouseMove$
+        .pipe(takeUntil(mouseUp$))
+        .subscribe((moveEvent) => {
+          const newWidth = startWidth + (moveEvent.clientX - startX);
+          const newHeight = startHeight + (moveEvent.clientY - startY);
+          this.renderer.setStyle(this.popup(), "width", `${newWidth}px`);
+          this.renderer.setStyle(this.popup(), "height", `${newHeight}px`);
+
+          this.scaleValue.set(this.popup().offsetWidth / this.initialWidth);
+
+          // this.renderer.setStyle(this.canvas(), "width", `${newWidth - 40}px`);
+          // this.renderer.setStyle(
+          //   this.canvas(),
+          //   "height",
+          //   `${newHeight - 150}px`
+          // );
+
+          // console.log(this.canvas().width, this.canvas().height);
+          // this.objectCollection.map((poligon) => {
+          //   poligon.points.map((point) => {
+          //     point.x += deltaWidth;
+          //     point.y += deltaHeight;
+          //   })
+          // })
+          // this.setCanvasScale();
+          // this.drawItemCollection();
+        });
+
+      mouseUp$.subscribe(() => moveSub.unsubscribe());
+    });
   }
 
   protected reset(): void {
@@ -140,9 +196,17 @@ export class PopupComponent implements OnInit, OnDestroy {
     fromEvent(window, "resize")
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
+        if (!this.popup().style.width.includes("%")) {
+          const newWidth = (this.popup().offsetWidth / window.innerWidth) * 100;
+          this.renderer.setStyle(
+            this.popup(),
+            "width",
+            `${Math.trunc(newWidth)}%`
+          );
+        }
         this.scaleValue.set(this.popup().offsetWidth / this.initialWidth);
       });
-    }
+  }
 
   private clearCanvas(): void {
     this.context().clearRect(0, 0, this.canvas().width, this.canvas().height);
