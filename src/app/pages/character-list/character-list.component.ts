@@ -17,14 +17,14 @@ import { Character } from "../../models/character.model";
 import {
   loadCharacters,
   setPage,
-  setSelectedCharacter
+  setSelectedCharacter,
 } from "../../store/character.actions";
 import {
   selectCharacters,
   selectError,
   selectLoading,
   selectPageAndTotalPage,
-  selectSelectedCharacter
+  selectSelectedCharacter,
 } from "../../store/character.selectors";
 import { CharacterCardComponent } from "./components/character-card/character-card.component";
 import { PopupComponent } from "./components/popup/popup.component";
@@ -71,7 +71,9 @@ export class CharacterListComponent implements OnInit {
 
   public onPopupStateChange(isOpen: boolean) {
     this.store.dispatch(
-      setSelectedCharacter({ selectedCharacter: isOpen ? this.selectedCharacter : null })
+      setSelectedCharacter({
+        selectedCharacter: isOpen ? this.selectedCharacter : null,
+      })
     );
   }
 

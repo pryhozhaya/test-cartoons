@@ -30,6 +30,7 @@ import {
 import { Point, Poligon } from "../../../../classes/rectangle.class";
 
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { Character } from "../../../../models/character.model";
 import { saveCharactersCanvas } from "../../../../store/character.actions";
 import {
   selectCharacterCanvasById,
@@ -47,7 +48,7 @@ import { CharacterCanvas } from "../../models/character-canvas-models";
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PopupComponent implements OnInit, OnDestroy {
-  @Input() data: any;
+  @Input({ required: true }) data!: Character;
   @Output() isOpenChange = new EventEmitter<boolean>();
 
   public scaleValue = signal<number>(1);
@@ -80,7 +81,6 @@ export class PopupComponent implements OnInit, OnDestroy {
   );
 
   ngOnInit(): void {
-    console.log(this.data);
     this.initResize();
     this.configureCanvas();
     this.store
@@ -105,47 +105,46 @@ export class PopupComponent implements OnInit, OnDestroy {
     this.mouseEventSubscription();
   }
 
-  get color(): string {
-    return this.colorControl.value || RECTANGLE_COLORS.blue;
-  }
-
   ngOnDestroy(): void {
     this.saveCanvas();
+  }
+
+  get color(): string {
+    return this.colorControl.value || RECTANGLE_COLORS.blue;
   }
 
   public closePopup() {
     this.isOpenChange.emit(false);
   }
 
-  initResize() {
-    fromEvent<MouseEvent>(this.resizer(), "mousedown").subscribe((event) => {
-      const startX = event.clientX;
-      const startY = event.clientY;
-      const startWidth = this.popup().offsetWidth;
-      const startHeight = this.popup().offsetHeight;
-
-      const mouseMove$ = fromEvent<MouseEvent>(document, "mousemove");
-      const mouseUp$ = fromEvent<MouseEvent>(document, "mouseup");
-
-      const moveSub = mouseMove$
-        .pipe(takeUntil(mouseUp$))
-        .subscribe((moveEvent) => {
-          const newWidth = startWidth + (moveEvent.clientX - startX);
-          // const newHeight = startHeight + (moveEvent.clientY - startY);
-          console.log(this.canvas().offsetWidth);
-          this.renderer.setStyle(this.popup(), "width", `${newWidth}px`);
-          // this.renderer.setStyle(this.popup(), "height", `${newHeight}px`);
-
-          this.scaleValue.set((this.popup().offsetWidth / (this.initialWidth)));
-        });
-
-      mouseUp$.subscribe(() => moveSub.unsubscribe());
-    });
-  }
-
   protected reset(): void {
     this.objectCollection = [];
     this.drawItemCollection();
+  }
+
+  public saveCanvasImageAsJpeg(quality = 0.92) {
+    this.clearCanvas();
+    const base_image = new Image();
+    base_image.crossOrigin = "anonymous";
+    base_image.src = this.data.image;
+    base_image.onload = () => {
+      this.context().drawImage(
+        base_image,
+        0,
+        0,
+        this.canvas().width,
+        this.canvas().height
+      );
+      this.objectCollection.forEach((poligon) =>
+        poligon.redraw(this.context())
+      );
+
+      const link = document.createElement("a");
+      link.download = "canvas-image.png";
+      link.href = this.canvas().toDataURL("image/png", quality);
+      link.click();
+      link.remove();
+    };
   }
 
   protected saveCanvas(): void {
@@ -167,6 +166,26 @@ export class PopupComponent implements OnInit, OnDestroy {
         : [...this.allCharactersCanvas, updatedCanvas];
 
     this.store.dispatch(saveCharactersCanvas({ charactersCanvas }));
+  }
+
+  private initResize() {
+    fromEvent<MouseEvent>(this.resizer(), "mousedown").subscribe((event) => {
+      const startX = event.clientX;
+      const startWidth = this.popup().offsetWidth;
+
+      const mouseMove$ = fromEvent<MouseEvent>(document, "mousemove");
+      const mouseUp$ = fromEvent<MouseEvent>(document, "mouseup");
+
+      const moveSub = mouseMove$
+        .pipe(takeUntil(mouseUp$))
+        .subscribe((moveEvent) => {
+          const newWidth = startWidth + (moveEvent.clientX - startX);
+          this.renderer.setStyle(this.popup(), "width", `${newWidth}px`);
+          this.scaleValue.set(this.popup().offsetWidth / this.initialWidth);
+        });
+
+      mouseUp$.subscribe(() => moveSub.unsubscribe());
+    });
   }
 
   private configureCanvas(): void {
@@ -195,31 +214,6 @@ export class PopupComponent implements OnInit, OnDestroy {
 
   private clearCanvas(): void {
     this.context().clearRect(0, 0, this.canvas().width, this.canvas().height);
-  }
-
-  public saveCanvasImageAsJpeg(quality = 0.92) {
-    this.clearCanvas();
-    const base_image = new Image();
-    base_image.crossOrigin = "anonymous";
-    base_image.src = this.data.image;
-    base_image.onload = () => {
-      this.context().drawImage(
-        base_image,
-        0,
-        0,
-        this.canvas().width,
-        this.canvas().height
-      );
-      this.objectCollection.forEach((poligon) =>
-        poligon.redraw(this.context())
-      );
-
-      const link = document.createElement("a");
-      link.download = "canvas-image.png";
-      link.href = this.canvas().toDataURL("image/png", quality);
-      link.click();
-      link.remove();
-    };
   }
 
   private isNearFirstPoint(
@@ -256,6 +250,7 @@ export class PopupComponent implements OnInit, OnDestroy {
     // Drawing logic
     mouseDown$
       .pipe(
+        takeUntilDestroyed(this.destroyRef),
         filter(
           () =>
             this.state === CanvaState.idle || this.state === CanvaState.drawing

@@ -21,11 +21,10 @@
       [character]="character"></app-character-card>
   </cdk-virtual-scroll-viewport>
 
-
-
   @if (selectedCharacter) {
-  <app-popup (isOpenChange)="onPopupStateChange($event)" [data]="selectedCharacter">
+  <app-popup
+    (isOpenChange)="onPopupStateChange($event)"
+    [data]="selectedCharacter">
   </app-popup>
-}
-  }
+  } }
 </div>

@@ -1,4 +1,7 @@
-import { CANVAS_COLORS, RECTANGLE_COLORS } from "../pages/character-list/constants/constants";
+import {
+  CANVAS_COLORS,
+  RECTANGLE_COLORS,
+} from "../pages/character-list/constants/constants";
 
 export interface Point {
   x: number;
@@ -10,18 +13,23 @@ export class Poligon {
     public points: Point[],
     public angle: number,
     public color: string = RECTANGLE_COLORS.green
-  ) {
-  }
+  ) {}
 
   redraw(context: CanvasRenderingContext2D): void {
     const { centerX, centerY } = this.keyPoints;
     const poligon = new Path2D();
     const rotatedPoints = this.points.map((point) => {
       return {
-        x: centerX + (point.x - centerX) * Math.cos(this.angle) - (point.y - centerY) * Math.sin(this.angle),
-        y: centerY + (point.x - centerX) * Math.sin(this.angle) + (point.y - centerY) * Math.cos(this.angle)
+        x:
+          centerX +
+          (point.x - centerX) * Math.cos(this.angle) -
+          (point.y - centerY) * Math.sin(this.angle),
+        y:
+          centerY +
+          (point.x - centerX) * Math.sin(this.angle) +
+          (point.y - centerY) * Math.cos(this.angle),
       };
-    })
+    });
 
     rotatedPoints.forEach((point, index) => {
       if (index === 0) {
@@ -40,7 +48,10 @@ export class Poligon {
   }
 
   move(dx: number, dy: number): void {
-    this.points = this.points.map((point) => ({ x: point.x + dx, y: point.y + dy }));
+    this.points = this.points.map((point) => ({
+      x: point.x + dx,
+      y: point.y + dy,
+    }));
   }
 
   isCursorInside(
@@ -49,16 +60,20 @@ export class Poligon {
     cursorY: number
   ): boolean {
     const path = new Path2D();
-    // context.save();
     const { centerX, centerY } = this.keyPoints;
-
     const rotatedPoints = this.points.map((point) => {
       return {
-        x: centerX + (point.x - centerX) * Math.cos(this.angle) - (point.y - centerY) * Math.sin(this.angle),
-        y: centerY + (point.x - centerX) * Math.sin(this.angle) + (point.y - centerY) * Math.cos(this.angle)
+        x:
+          centerX +
+          (point.x - centerX) * Math.cos(this.angle) -
+          (point.y - centerY) * Math.sin(this.angle),
+        y:
+          centerY +
+          (point.x - centerX) * Math.sin(this.angle) +
+          (point.y - centerY) * Math.cos(this.angle),
       };
-    })
-    
+    });
+
     path.moveTo(rotatedPoints[0].x, rotatedPoints[0].y);
 
     rotatedPoints.forEach((point, index) => {
@@ -70,7 +85,6 @@ export class Poligon {
     });
     path.closePath();
 
-    // context.restore();
     return context.isPointInPath(path, cursorX, cursorY);
   }
 
@@ -85,10 +99,16 @@ export class Poligon {
 
     const rotatedPoints = framePoints.map((point) => {
       return {
-        x: centerX + (point.x - centerX) * Math.cos(this.angle) - (point.y - centerY) * Math.sin(this.angle),
-        y: centerY + (point.x - centerX) * Math.sin(this.angle) + (point.y - centerY) * Math.cos(this.angle)
+        x:
+          centerX +
+          (point.x - centerX) * Math.cos(this.angle) -
+          (point.y - centerY) * Math.sin(this.angle),
+        y:
+          centerY +
+          (point.x - centerX) * Math.sin(this.angle) +
+          (point.y - centerY) * Math.cos(this.angle),
       };
-    })
+    });
 
     const frame = new Path2D();
     rotatedPoints.forEach((point, index) => {
@@ -123,22 +143,22 @@ export class Poligon {
       return max > current.y ? max : current.y;
     }, this.points[0].y);
     const centerX = minX + (maxX - minX) / 2;
-    const centerY =  minY + (maxY - minY) / 2;
+    const centerY = minY + (maxY - minY) / 2;
     return {
       minX,
       maxX,
       centerX,
       minY,
       maxY,
-      centerY
+      centerY,
     };
   }
   isCursorNearCorner(
     context: CanvasRenderingContext2D,
     cursorX: number,
-    cursorY: number,
+    cursorY: number
   ): boolean {
-    const { minX, centerX,  minY, centerY } = this.keyPoints;
+    const { minX, centerX, minY, centerY } = this.keyPoints;
     const rotatedX =
       centerX +
       (minX - centerX) * Math.cos(this.angle) -

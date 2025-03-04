@@ -8,18 +8,11 @@ import {
 import { MatDialogModule } from "@angular/material/dialog";
 import { Store } from "@ngrx/store";
 import { Character } from "../../../../models/character.model";
-import {
-  setSelectedCharacter
-} from "../../../../store/character.actions";
+import { setSelectedCharacter } from "../../../../store/character.actions";
 
 @Component({
   selector: "app-character-card",
-  imports: [
-    MatDialogModule,
-    CommonModule,
-    MatDialogModule,
-    NgOptimizedImage,
-  ],
+  imports: [MatDialogModule, CommonModule, MatDialogModule, NgOptimizedImage],
   templateUrl: "./character-card.component.html",
   styleUrl: "./character-card.component.scss",
   standalone: true,
