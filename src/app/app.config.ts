@@ -6,7 +6,7 @@ import {
   provideHttpClient,
   withInterceptorsFromDi,
 } from "@angular/common/http";
-import { importProvidersFrom } from "@angular/core";
+import { importProvidersFrom, isDevMode } from "@angular/core";
 import { MatNativeDateModule } from "@angular/material/core";
 import {
   BrowserAnimationsModule,
@@ -18,22 +18,24 @@ import { routes } from "./app.routes";
 import { LoadingInterceptor } from "./interceptor/loading.interceptor";
 import { CharacterEffects } from "./store/character.effects";
 import { characterReducer } from "./store/character.reducer";
+import { provideStoreDevtools } from '@ngrx/store-devtools';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideStore({
-      characters: characterReducer,
+        characters: characterReducer,
     }),
     provideHttpClient(withInterceptorsFromDi()),
     {
-      provide: HTTP_INTERCEPTORS,
-      useClass: LoadingInterceptor,
-      multi: true,
+        provide: HTTP_INTERCEPTORS,
+        useClass: LoadingInterceptor,
+        multi: true,
     },
     provideEffects([CharacterEffects]),
     provideAnimations(),
     importProvidersFrom(MatNativeDateModule, BrowserAnimationsModule),
-  ],
+    provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() })
+],
 };

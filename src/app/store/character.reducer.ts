@@ -71,10 +71,12 @@ export const characterReducer = createReducer(
     page,
   })),
 
-  on(setSearchValue, (state, { searchValue }) => ({
-    ...state,
-    searchValue,
-  })),
+  on(setSearchValue, (state, { searchValue }) => 
+    adapter.removeAll( ({
+      ...state,
+      searchValue,
+    }))
+   ),
 
   on(setSelectedCharacter, (state, { selectedCharacter }) => ({
     ...state,

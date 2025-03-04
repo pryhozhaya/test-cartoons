@@ -12,6 +12,7 @@
 
   .popup-actions {
     position: absolute;
+    z-index: 110;
     top: 20px;
     display: flex;
     justify-content: space-between;
